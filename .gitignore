@@ -1,0 +1,35 @@
+# Dependencies and generated output
+node_modules/
+dist/
+coverage/
+.vitest/
+*.tsbuildinfo
+*.log
+
+# Local environment, credentials, and signing material
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+key.properties
+credentials*.json
+service-account*.json
+
+# Learner data and local database exports
+user-data/
+progress-exports/
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+
+# Local tools and operating system files
+.idea/
+.vscode/
+.vercel/
+.DS_Store
+Thumbs.db
