@@ -22,9 +22,24 @@ The application is developed and checked locally. Hosting setup, service purchas
 | Accounts and synchronization | A later cloud phase | Deferred |
 | SQL execution | Display examples; do not execute user-supplied SQL in the MVP | Constraint for future features |
 
+## Visual design reference
+
+The user supplied this mockup on November 19, 2026 as the intended visual direction for both the Android app and the web browser experience.
+
+![SQLFlashCards mockup showing a Left Join topic card, four learning sections, revision count, and proficiency levels](app-design-reference.png)
+
+- Use a light lavender background, purple gradients, large rounded cards, soft shadows, bold dark text, and the SQLFlashCards name with a stacked-card logo.
+- Place a prominent purple topic card below the header, with the topic name and an explanatory visual. The example shows Left Join with the entire left circle shaded green, including the overlap.
+- Arrange four large learning tiles in two columns: Definition in coral, Concept in yellow, Examples in mint green, and Syntax in blue. Pair each label with a simple icon.
+- Show a separate Number of revisions row with a revision icon and a prominent purple count badge.
+- Show Proficiency below it, with Beginner, Intermediate, and Expert levels and a purple highlight for the current level.
+- Preserve this visual hierarchy across Android and web, adapting sizing and spacing to the screen while keeping text readable and controls easy to tap.
+
+Left Join, the count of 3, and the highlighted Intermediate level are illustrative mockup values, not initial learner data. Proficiency should reflect the planned performance-based expertise feature; the scoring formula remains to be defined. The mockup does not define what happens when a learning tile is opened. This reference records the intended design for a later implementation stage; the current app remains the Stage 1 shell.
+
 ## Module boundaries
 
-`src/main.tsx` mounts React. `src/app/` contains the app shell and its component test; shared styling lives in `src/styles.css`. Test setup lives in `src/test/`. Keep configuration at the repository root and architectural and educational documentation in `docs/`.
+`src/main.tsx` mounts React. `src/app/` contains the app shell and its component test; shared styling lives in `src/styles.css`. Test setup lives in `src/test/`. Keep configuration at the repository root and project design, status, reference, and educational artifacts in `docs/project-artifacts/`.
 
 As later stages introduce behavior, use these boundaries:
 

@@ -55,9 +55,15 @@ src/
   app/                  App shell, styles, and component test
   styles.css            Shared page styles
   test/setup.ts         Test environment setup
-docs/
+docs/project-artifacts/
+  README.md             Artifact index and maintenance workflow
+  status.md             Current progress and verification record
+  hld.md                High level system design
+  lld.md                Low level implementation design
   architecture.md       Architecture decisions and stage boundaries
   syllabus.md           Planned PostgreSQL syllabus and example card
+  app-design-reference.png  User's Android and web mockup
+AGENTS.md               Artifact maintenance guidance for project work
 .github/workflows/      Automated checks
 package-lock.json       Reproducible dependency installation
 ```
@@ -74,11 +80,13 @@ The strict TypeScript, ESLint, Vite, and Vitest configuration files live at the 
 
 The planned learning flow is topic selection, answer reveal, performance feedback, and revision. It will distinguish covered and uncovered topics, count revisions, and report an expertise level based on performance. Revision reminders must support the requested **1, 3, 5, 7, 20, and 30 day** rule; its scheduling semantics and the expertise formula still need to be specified before implementation.
 
-See [Architecture](docs/architecture.md) for module boundaries and outstanding decisions, and [Planned syllabus](docs/syllabus.md) for the 14-topic learning scope.
+All design, status, syllabus, and visual reference artifacts live in [Project artifacts](docs/project-artifacts/README.md). See [Project status](docs/project-artifacts/status.md) for progress, the [High level design](docs/project-artifacts/hld.md) for system components and delivery, the [Low level design](docs/project-artifacts/lld.md) for component contracts and interactions, [Architecture](docs/project-artifacts/architecture.md) for technical decisions, and [Planned syllabus](docs/project-artifacts/syllabus.md) for the learning scope.
 
 ## Contributing
 
 Implement only the requested stage. Inspect the repository first, work on a small branch, and open a reviewable PR. Include changed files, executed checks, checks that could not run, manual verification steps, and outstanding issues. Keep the dependency lockfile and documentation current; fix failing checks without disabling them or weakening tests.
+
+Update the affected [project artifacts](docs/project-artifacts/README.md) alongside each relevant change, and keep the status record and design documents consistent with the implemented app.
 
 Never commit credentials, `.env` secrets, Android signing keys, or learner data. Git ignore rules are a safeguard, so review the staged diff as well. Stage 1 does not deploy to Vercel, package Android, purchase services, or publish a public release.
 
