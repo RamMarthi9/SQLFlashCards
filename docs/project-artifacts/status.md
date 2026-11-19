@@ -34,8 +34,13 @@ The LLD proposes specific screen interactions and contracts. These are design pr
 | November 19, 2026 | Local `npm.cmd run check` against the Stage 1 code in this session. | Type checking, ESLint, one Vitest test, and the production build passed. This validates the foundation, not future learning features. |
 | November 19, 2026 | Artifact consolidation and documentation review. | The five existing artifacts were moved with matching SHA-256 hashes before updating location guidance. Cross-links and repository references were checked. No application code changed and no application tests were rerun for this documentation-only task. |
 | November 19, 2026 | Pre-publication documentation checks. | All 27 local documentation links across 9 Markdown files resolved, including heading anchors; `git diff --check` passed. The publication changes contain only project documentation, the supplied mockup, and maintenance instructions. |
+| November 19, 2026 | [GitHub Actions run 44578008968](https://github.com/RamMarthi9/SQLFlashCards/actions/runs/44578008968) for artifact commit `e1afa89`. | The Checks workflow completed successfully, including type checking, linting, tests, and the production build. This result belongs to that commit; use the publication PR for the latest head's checks. |
 
-Browser visual testing, the GitHub-hosted CI outcome, deployment, and Android device testing have not been verified in this documentation work. The repository README separately records a dependency advisory dated November 18, 2026; that audit was not rerun here.
+Browser visual testing, deployment, and Android device testing have not been verified in this documentation work. The repository README separately records a dependency advisory dated November 18, 2026; that audit was not rerun here.
+
+## GitHub publication
+
+The artifact collection and maintenance instructions were published through [pull request 2](https://github.com/RamMarthi9/SQLFlashCards/pull/2), from `docs/project-artifacts` into `main`. The PR records the current review/merge state and checks for its latest commit. Future project changes should include affected artifact updates and a dated history entry through the same branch-and-PR workflow.
 
 ## Change history
 
@@ -44,5 +49,6 @@ Browser visual testing, the GitHub-hosted CI outcome, deployment, and Android de
 | November 19, 2026 | Captured the user's visual direction and created the HLD and LLD. |
 | November 19, 2026 | Consolidated the designs, syllabus, architecture, and original mockup in this folder; added an index, status record, and maintenance instructions. |
 | November 19, 2026 | Added the requested daily maintenance rule: append history on days the project changes, update affected designs in place, and publish artifact updates with the related GitHub changes. |
+| November 19, 2026 | Published the collection in GitHub PR 2 and recorded the successful checks for its initial artifact commit. |
 
 Update this record as project work progresses, replacing stale current-state statements and adding actual verification evidence. Keep design-document completion separate from implemented application functionality.
