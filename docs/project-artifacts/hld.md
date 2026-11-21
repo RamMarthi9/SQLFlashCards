@@ -2,11 +2,11 @@
 
 SQLFlashCards will use one React and TypeScript web application for desktop browsers and Android. It will teach SQL through flashcards, track syllabus coverage, and help learners revise. Learning content will ship with the app; learner progress will be stored locally on the device.
 
-This design follows the [architecture decisions](architecture.md), [14-topic syllabus](syllabus.md), and [user's visual mockup](app-design-reference.png). The current implementation contains only the home screen and development/check tooling. The learning components, storage, hosting, and Android package below are planned.
+This design follows the [architecture decisions](architecture.md), [14-topic syllabus](syllabus.md), and [user's visual mockup](app-design-reference.png). The first working learning flow now includes all 14 topic headings, six starter cards across Basic queries, Filtering, and Joins, answer reveal, inline learning sections, and card navigation. The other 11 topics show Content coming soon. Progress rules, storage, hosting, and the Android package remain planned.
 
 See the [Low level design](lld.md) for proposed components, TypeScript contracts, storage transactions, screen interactions, and implementation checks.
 
-The separate [SQL syllabus index](sql-syllabus-index.md) expands the same 14 learning modules into numbered subtopics with outcomes and source references. It does not change the topic-coverage denominator or indicate that flashcard content is implemented.
+The separate [SQL syllabus index](sql-syllabus-index.md) expands the same 14 learning modules into numbered subtopics with outcomes and source references. Starter cards map explicitly to that index; their availability does not mean a learner has completed those topics or that the full curriculum has been authored.
 
 ## Product scope
 
@@ -32,9 +32,9 @@ flowchart TD
 
 | Component | Responsibility | Current state |
 | --- | --- | --- |
-| React screens | Show topics, learning cards, due revisions, and progress; accept learner actions. | Home screen exists; learning screens planned. |
-| Learning coordinator | Load content and progress, pass actions to the rules, save results, and refresh the screen. | Planned. |
-| Content reader | Load and validate reviewed topics and cards from versioned JSON. | Planned; syllabus exists as documentation. |
+| React screens | Show topics and learning cards; later add due revisions and progress. | Topic list, question/reveal, four inline sections, and bounded card navigation implemented. |
+| Learning coordinator | Load content and progress, pass actions to the rules, save results, and refresh the screen. | Current App coordinates content and routes with transient React state; persistence services remain planned. |
+| Content reader | Load and validate reviewed topics and cards from versioned JSON. | Bundled JSON with runtime validation, 14 topic records, and six starter cards. |
 | Domain rules | Calculate coverage, revision counts, due dates, and proficiency. | Planned; counting, scheduling, and scoring details remain open. |
 | Storage adapter | Read and write learner records and handle changes to the stored-data format. | Planned. |
 | IndexedDB | Keep structured learner records in the browser. | Planned. |
@@ -47,11 +47,11 @@ IndexedDB is scoped to the website's origin. Local records are not a cloud backu
 
 ## Screens and visual direction
 
-The proposed navigation is a topic list, a topic/card learning screen, and a due-revision view. The learning screen will follow the supplied mockup: lavender background, a large purple topic card with a relevant visual, four coloured learning tiles, a revision-count row, and Beginner, Intermediate, and Expert proficiency indicators.
+Implemented hash navigation connects the topic list and topic/card learning screen, including direct links and browser Back/Forward. The learning screen follows the supplied mockup's lavender background, large purple concept card, join visuals, and four coloured learning tiles. The due-revision view, revision-count row, and proficiency indicators remain future work and are hidden until their policies and persistence exist.
 
-Definition will use coral, Concept yellow, Examples mint, and Syntax blue. The two-column tile layout will adapt to the available screen width. Controls must support touch and keyboard navigation, and selected proficiency must be understandable without relying only on colour.
+Definition uses coral, Concept yellow, Examples mint, and Syntax blue. The tile layout adapts to available width and uses keyboard-accessible disclosure buttons. Each opens one inline section below the grid; selecting it again closes the section, and its Close button returns focus to the tile.
 
-The mockup's Left Join, revision count of 3, and Intermediate highlight are example content and values. New learners start with every topic uncovered; proficiency will depend on the scoring rules and available performance evidence. Whether tiles open panels, dialogs, or separate screens remains a UI decision.
+The mockup's Left Join is now a starter card. Its revision count of 3 and Intermediate highlight remain illustrative values, never initial learner data. Topic completion is not yet recorded, and proficiency still depends on future scoring rules and performance evidence.
 
 ## Data ownership
 
@@ -70,6 +70,10 @@ Revision counts and proficiency should come from learner activity and the agreed
 Topic completion is a separate learner action. A covered topic may still need revision. Syllabus progress is `covered topics / total topics * 100`; it is not the same as proficiency.
 
 ## Learning interaction
+
+The implemented flow loads and validates bundled content, opens a topic's first available card, reveals an answer on request, toggles reference sections, and moves between cards. Unknown routes or mismatched topic/card IDs show an unavailable-content view. Card changes, browser history navigation, and reloads reset answer visibility and the open section. These actions create no learner records.
+
+The following extension remains planned:
 
 1. The app loads the content collection and reads local learner records.
 2. The learner selects a topic and reads a question or learning section.
@@ -107,14 +111,14 @@ Offline launching requires a separate asset-caching design; local progress stora
 
 ## Validation and remaining decisions
 
-The existing `npm.cmd run check` command runs type checking, linting, the home-screen test, and the production build. As features are added, validation will cover answer reveal and navigation, save/reload behaviour, failed saves and duplicate submissions, revision dates, scoring, and content/storage upgrades. Browser checks will cover narrow and desktop layouts, keyboard access, and the supplied visual direction. Android delivery will need device testing and domain-verification checks.
+The existing `npm.cmd run check` command runs type checking, linting, tests, and the production build. The first flow adds content and interaction tests; actual executed results belong in [Project status](status.md). Later checks must cover saved-progress reload, failed saves and duplicate submissions, revision dates, scoring, and content/storage upgrades. Browser checks cover narrow and desktop layouts, keyboard access, and the supplied visual direction. Android delivery will need device testing and domain-verification checks.
 
 Before implementing the corresponding features, settle these decisions:
 
-- How the 14 syllabus topics map to individual concepts such as Left Join, and whether the displayed revision count is for a card, concept, or whole topic.
+- How the displayed revision count relates to individual cards, concepts, or whole topics; the initial topic/card mapping is now explicit in the content catalogue.
 - Whether 1, 3, 5, 7, 20, and 30 days are offsets from first learning or gaps between revisions; also timezone and missed-revision behaviour.
 - What action counts as a revision, what feedback is collected, how proficiency is calculated, and what to display before there is enough evidence.
-- How learning tiles open and how content IDs and saved-data versions evolve.
+- How content IDs and saved-data versions evolve as the authored catalogue and learner records grow.
 - Whether reminders require closed-app delivery, and whether offline launch or progress export is needed for the first release.
 
-The next implementation step is a working learning flow with a small validated content collection: choose a topic, read a question, reveal its answer, and move between cards using the mockup's visual direction. Local progress, revision rules, hosting, and Android packaging can then be added in separate stages.
+The next implementation step is explicit topic completion and IndexedDB persistence with save/reload and failure handling. Expand the reviewed card collection alongside later stages. Revision rules, hosting, and Android packaging remain separate delivery steps.

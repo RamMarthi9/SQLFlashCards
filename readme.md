@@ -2,7 +2,7 @@
 
 SQLFlashCards is a SQL learning app being built around short flashcards, syllabus coverage, and spaced revision.
 
-**Stage 1: application foundation.** The repository now provides a React, TypeScript, and Vite scaffold with a static app shell, strict type checking, linting, a render smoke test, and a production build. Flashcard interaction, progress storage, reminders, revision counts, and expertise scoring are future work.
+**First working flashcard flow.** Choose a topic, read a question, reveal its answer, explore Definition, Concept, Examples, and Syntax, and move between cards. Six starter cards cover SELECT, DISTINCT, WHERE, NULL, INNER JOIN, and LEFT JOIN. All 14 syllabus topics are listed; the other 11 show Content coming soon. Saved progress, reminders, revision counts, and proficiency scoring are future work.
 
 ## Run locally
 
@@ -15,7 +15,7 @@ npm run dev
 
 Open the local URL printed by Vite. In Windows PowerShell, use `npm.cmd` instead of `npm` if script execution policy blocks `npm.ps1`.
 
-`npm ci` installs the versions in `package-lock.json`. Commit changes to both `package.json` and the lockfile when updating dependencies. No environment variables, database, account, or credentials are needed for Stage 1.
+`npm ci` installs the versions in `package-lock.json`. Commit changes to both `package.json` and the lockfile when updating dependencies. No environment variables, database, account, or credentials are needed for the current learning flow.
 
 TypeScript 6 and Vitest 4 are pinned to compatible versions of the lint tooling and Testing Library matchers. Upgrade these packages together only after the full checks pass; library declarations are checked too.
 
@@ -39,20 +39,24 @@ As of November 18, 2026, the dependency audit reports a high-severity denial-of-
 
 ## Manual verification
 
-1. Run `npm ci`, then `npm run check`.
-2. Run `npm run dev` and open the printed URL. Confirm the SQLFlashCards shell loads and identifies the learning features as planned.
-3. Inspect the browser console for errors. Check the layout at a desktop width and a narrow mobile width, including readable text and no horizontal overflow.
-4. Navigate any links with the keyboard and confirm the focus indicator is visible.
-5. Stop the dev server, run `npm run build`, then `npm run preview`. Repeat the loading and console checks using the preview URL.
+1. In Windows PowerShell, run `npm.cmd ci` if dependencies are not installed, then `npm.cmd run check` for type checking, linting, automated tests, and the production build.
+2. Run `npm.cmd run dev` and open the URL Vite prints. Confirm all 14 topics appear, with starter cards in Basic queries, Filtering, and Joins and Content coming soon for the other topics.
+3. Open Basic queries. Read the first question and confirm its answer is hidden; select Reveal answer to show it. Select each of Definition, Concept, Examples, and Syntax. Only one panel should be open; select the same tile again to close it.
+4. Use Next and Previous. Confirm the card position changes, the answer and section reset, and navigation is disabled at the first/last card. Use browser Back and Forward and confirm they restore the correct card with its answer hidden.
+5. Open Joins and the Left Join card. Check its diagram, then compare the input and result tables in Examples. Open a section with the keyboard, activate its Close button, and confirm focus returns to that section's tile.
+6. Reload a card URL such as `#/topics/joins/cards/joins-left-basic`. It should reopen that card with the answer hidden. Try `#/topics/joins/cards/missing` and confirm a clear unavailable-content view offers a return to Topics.
+7. Check at 320, 390, 768, and 1280 px widths and with enlarged text. Text and controls should remain readable; SQL and table panels may scroll horizontally without causing whole-page overflow. Navigate with Tab and Enter/Space and inspect the browser console for errors.
+8. Stop the dev server and run `npm.cmd run preview` after the successful build. Repeat the topic, card, deep-link, and browser-console checks using the preview URL.
 
-These steps are verification instructions, not a claim that browser checks have already been performed. This stage does not provide functioning flashcards, saved progress, or alarms to test.
+These are repeatable test instructions; actual completed checks are recorded in [Project status](docs/project-artifacts/status.md). Answers and open sections reset on navigation or refresh. This version does not save learning progress, execute SQL, count revisions, assign proficiency, or schedule reminders.
 
 ## Repository layout
 
 ```text
 src/
   main.tsx              React entry point
-  app/                  App shell, styles, and component test
+  app/                  Hash routes, topic/learning screens, components, styles, and tests
+  content/              Versioned JSON starter cards, content types, validation, and tests
   styles.css            Shared page styles
   test/setup.ts         Test environment setup
 docs/project-artifacts/
@@ -79,7 +83,7 @@ The strict TypeScript, ESLint, Vite, and Vitest configuration files live at the 
 - Teach SQL concepts broadly, with no single database engine as the default teaching dialect. Label database-specific syntax where needed. The MVP will display SQL examples without executing user-supplied SQL.
 - Vercel will host the web application in a later deployment stage. Android distribution will use a Trusted Web Activity through Bubblewrap in a later stage.
 
-The planned learning flow is topic selection, answer reveal, performance feedback, and revision. It will distinguish covered and uncovered topics, count revisions, and report an expertise level based on performance. Revision reminders must support the requested **1, 3, 5, 7, 20, and 30 day** rule; its scheduling semantics and the expertise formula still need to be specified before implementation.
+Topic selection, answer reveal, inline learning sections, and card navigation are implemented. Later stages will add performance feedback, explicit covered/uncovered topics, revision counts, and proficiency based on performance. Revision reminders must support the requested **1, 3, 5, 7, 20, and 30 day** rule; its scheduling semantics and the proficiency formula still need to be specified before implementation.
 
 All design, status, syllabus, and visual reference artifacts live in [Project artifacts](docs/project-artifacts/README.md). See [Project status](docs/project-artifacts/status.md) for progress, the [High level design](docs/project-artifacts/hld.md) for system components and delivery, the [Low level design](docs/project-artifacts/lld.md) for component contracts and interactions, [Architecture](docs/project-artifacts/architecture.md) for technical decisions, and [Planned syllabus](docs/project-artifacts/syllabus.md) for the learning scope.
 
@@ -91,6 +95,6 @@ Implement only the requested stage. Inspect the repository first, work on a smal
 
 Update the affected [project artifacts](docs/project-artifacts/README.md) alongside each relevant change, and keep the status record and design documents consistent with the implemented app.
 
-Never commit credentials, `.env` secrets, Android signing keys, or learner data. Git ignore rules are a safeguard, so review the staged diff as well. Stage 1 does not deploy to Vercel, package Android, purchase services, or publish a public release.
+Never commit credentials, `.env` secrets, Android signing keys, or learner data. Git ignore rules are a safeguard, so review the staged diff as well. The current stage does not deploy to Vercel, package Android, purchase services, or publish a public release.
 
 Reference documentation: [Vite](https://vite.dev/guide/), [TypeScript strict mode](https://www.typescriptlang.org/tsconfig/strict.html), and [Vitest](https://vitest.dev/guide/).
