@@ -49,9 +49,9 @@ Real-browser visual, keyboard, and viewport checks remain unverified: the browse
 
 ## GitHub publication
 
-The artifact collection and maintenance instructions were published through [pull request 2](https://github.com/RamMarthi9/SQLFlashCards/pull/2), from `docs/project-artifacts` into `main`. The PR records the current review/merge state and checks for its latest commit. Future project changes should include affected artifact updates and a dated history entry through the same branch-and-PR workflow.
+The artifact collection and maintenance instructions were merged into `main` through [pull request 2](https://github.com/RamMarthi9/SQLFlashCards/pull/2) on November 21, 2026, at merge commit `b65673e784b67cf0d4e988cbd8f7714a6d988f79`. Its [post-merge Checks run](https://github.com/RamMarthi9/SQLFlashCards/actions/runs/44935488723) passed type checking, linting, tests, and the production build.
 
-The first working flow uses the [feat/flashcard-flow branch](https://github.com/RamMarthi9/SQLFlashCards/tree/feat/flashcard-flow), based on the still-unmerged artifact branch. Its implementation and affected designs are reviewed together in a separate pull request against `docs/project-artifacts`; merge the artifact prerequisite before bringing the flow into `main`.
+The first working flow and its accompanying artifacts are tracked in [pull request 3](https://github.com/RamMarthi9/SQLFlashCards/pull/3), from `feat/flashcard-flow` into `main`. It was retargeted after PR 2's merge was verified, following the user's request for two separate merges in order. The PR page records its final merge state, exact commit, and checks. Future changes should include affected artifacts and dated history through the same branch-and-PR workflow.
 
 ## Change history
 
@@ -64,5 +64,6 @@ The first working flow uses the [feat/flashcard-flow branch](https://github.com/
 | November 21, 2026 | Corrected the app, page/package descriptions, syllabus, HLD, LLD, architecture, and maintenance guidance to teach SQL broadly, with database-specific examples labelled where relevant. Preserved the original mockup and existing learning-feature scope. |
 | November 21, 2026 | Added a separately indexed SQL curriculum with source references, preserving the 14-module structure. Expanded the detailed scope to include set intersection/difference and basic views, and linked the index from the syllabus, HLD, LLD, artifact index, and repository README. |
 | November 21, 2026 | Implemented the first content/reveal flow with six starter cards, a 14-topic list, runtime content validation, hash navigation, inline learning sections, and mockup-based styling. Updated the designs, syllabus inventory, and README test instructions; progress, review, scheduling, and proficiency remain later stages. |
+| November 21, 2026 | Verified PR 2's successful merge into main and passing post-merge checks, then retargeted PR 3 to main for the separately requested second merge. Updated this publication record in PR 3; the PR pages retain the exact merge outcomes and checks. |
 
 Update this record as project work progresses, replacing stale current-state statements and adding actual verification evidence. Keep design-document completion separate from implemented application functionality.
