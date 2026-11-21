@@ -1,0 +1,60 @@
+# SQLFlashCards Project Status
+
+Last updated: November 21, 2026.
+
+The application is at Stage 1: a static home screen and development/check tooling. It is a general SQL learning app, with database-specific syntax labelled when relevant. The architecture, HLD, LLD, syllabus, and supplied mockup are documented; the learning experience remains to be implemented. The foundation was introduced in commit `59d115f`, the Stage 1 merge; subsequent scope and documentation changes are recorded below.
+
+## Completed
+
+- React and strict TypeScript foundation, Vite development/build setup, ESLint, Vitest, and a home-screen test.
+- GitHub Actions configuration for type checking, linting, tests, and the production build.
+- A documented 14-topic SQL syllabus and example flashcard.
+- A separate indexed SQL syllabus with numbered subtopics, learning outcomes, prerequisites, keyword lookup, and researched primary-source references.
+- App copy, page metadata, and project guidance aligned with the user's general SQL learning scope.
+- The user's Android/web visual reference, plus HLD and LLD documents describing the planned system.
+- A single project-artifacts folder, an index, and maintenance guidance for future project work.
+
+## Next implementation step
+
+Build the first usable learning flow with a small validated content collection: choose a topic, read a question, reveal the answer, open Definition/Concept/Examples/Syntax sections, and navigate between cards. Follow the mockup's visual direction and the LLD's component boundaries.
+
+Local progress, review recording, revision rules, proficiency scoring, hosting, and Android packaging follow in later stages. See the [LLD delivery sequence](lld.md#delivery-sequence-and-boundaries).
+
+## Open decisions
+
+- How card-level reviews relate to the requested topic revision counter, and which actions qualify as revisions.
+- Whether 1, 3, 5, 7, 20, and 30 days are offsets or intervals, including missed reviews and timezone behaviour.
+- Proficiency feedback, evidence requirements, scoring thresholds, and policy upgrades.
+- Whether the first release needs closed-app reminders, offline launch, or progress export.
+
+The LLD proposes specific screen interactions and contracts. These are design proposals until implemented or confirmed through the corresponding project work. The mockup's revision count of 3 and Intermediate highlight are illustrative values, not learner data.
+
+## Verification record
+
+| Date | Evidence | Result and scope |
+| --- | --- | --- |
+| November 19, 2026 | Local `npm.cmd run check` against the Stage 1 code in this session. | Type checking, ESLint, one Vitest test, and the production build passed. This validates the foundation, not future learning features. |
+| November 19, 2026 | Artifact consolidation and documentation review. | The five existing artifacts were moved with matching SHA-256 hashes before updating location guidance. Cross-links and repository references were checked. No application code changed and no application tests were rerun for this documentation-only task. |
+| November 19, 2026 | Pre-publication documentation checks. | All 27 local documentation links across 9 Markdown files resolved, including heading anchors; `git diff --check` passed. The publication changes contain only project documentation, the supplied mockup, and maintenance instructions. |
+| November 19, 2026 | [GitHub Actions run 44578008968](https://github.com/RamMarthi9/SQLFlashCards/actions/runs/44578008968) for artifact commit `e1afa89`. | The Checks workflow completed successfully, including type checking, linting, tests, and the production build. This result belongs to that commit; use the publication PR for the latest head's checks. |
+| November 21, 2026 | Local validation after correcting the SQL learning scope. | `npm.cmd run check` passed type checking, linting, one Vitest test, and the production build. All 27 local documentation links passed; diff whitespace checks passed. Source/document review found no remaining engine-default product wording, and the original mockup's SHA-256 hash is unchanged. |
+| November 21, 2026 | Indexed syllabus and reference review. | Confirmed 14 modules and 74 unique subtopic IDs, reviewed primary references and database-specific qualifications, and verified all 64 local documentation links across 10 Markdown files, including heading anchors. `git diff --check` passed. This change contains only documentation; application checks were not rerun locally. |
+
+Browser visual testing, deployment, and Android device testing have not been verified in this documentation work. The repository README separately records a dependency advisory dated November 18, 2026; that audit was not rerun here.
+
+## GitHub publication
+
+The artifact collection and maintenance instructions were published through [pull request 2](https://github.com/RamMarthi9/SQLFlashCards/pull/2), from `docs/project-artifacts` into `main`. The PR records the current review/merge state and checks for its latest commit. Future project changes should include affected artifact updates and a dated history entry through the same branch-and-PR workflow.
+
+## Change history
+
+| Date | Change |
+| --- | --- |
+| November 19, 2026 | Captured the user's visual direction and created the HLD and LLD. |
+| November 19, 2026 | Consolidated the designs, syllabus, architecture, and original mockup in this folder; added an index, status record, and maintenance instructions. |
+| November 19, 2026 | Added the requested daily maintenance rule: append history on days the project changes, update affected designs in place, and publish artifact updates with the related GitHub changes. |
+| November 19, 2026 | Published the collection in GitHub PR 2 and recorded the successful checks for its initial artifact commit. |
+| November 21, 2026 | Corrected the app, page/package descriptions, syllabus, HLD, LLD, architecture, and maintenance guidance to teach SQL broadly, with database-specific examples labelled where relevant. Preserved the original mockup and existing learning-feature scope. |
+| November 21, 2026 | Added a separately indexed SQL curriculum with source references, preserving the 14-module structure. Expanded the detailed scope to include set intersection/difference and basic views, and linked the index from the syllabus, HLD, LLD, artifact index, and repository README. |
+
+Update this record as project work progresses, replacing stale current-state statements and adding actual verification evidence. Keep design-document completion separate from implemented application functionality.
