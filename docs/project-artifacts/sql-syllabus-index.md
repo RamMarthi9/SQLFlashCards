@@ -10,7 +10,22 @@ The module grouping comes from the existing project plan. The source links below
 
 The broad learning coverage was checked against [Harvard CS50 SQL](https://cs50.harvard.edu/sql/) and [Microsoft Learn's querying and data-modification path](https://learn.microsoft.com/en-us/training/paths/get-started-querying-with-transact-sql/). Each module links more specific references. CS50 examples often use SQLite, Microsoft examples use Transact-SQL, and the MySQL and Oracle references identify their editions. These references do not make any one engine the app's default.
 
-The documents are learning plans, not completed flashcard content or learner progress. The app's first release will display queries and explanations; exercises here describe material to author, not an implemented SQL execution environment. Source links establish topic coverage; each eventual card's syntax, explanation, and expected result still need review for its labelled database.
+The index describes the full learning plan, not learner progress or a claim that every subtopic has an authored card. The first working flow displays six starter cards, listed below, with queries and explanations; exercises elsewhere in this index remain content-authoring ideas. There is no SQL execution environment. Source links establish topic coverage; each new card's syntax, explanation, and expected result need review for its relevant database context.
+
+## Implemented starter cards
+
+The bundled catalogue contains 14 topic records and these six cards. Each has Definition, Concept, Examples, and Syntax sections, with example input/result tables and primary references. Availability is separate from completion; the app does not yet record learner progress.
+
+| Topic ID | Card ID | Concept | Curriculum IDs |
+| --- | --- | --- | --- |
+| `basic-queries` | `basic-select` | SELECT and FROM | SQL-02.01, SQL-02.05 |
+| `basic-queries` | `basic-distinct` | DISTINCT | SQL-02.04 |
+| `filtering` | `filtering-where` | WHERE | SQL-03.01 |
+| `filtering` | `filtering-null` | NULL and IS NULL | SQL-03.05 |
+| `joins` | `joins-inner-basic` | INNER JOIN | SQL-07.01, SQL-07.02, SQL-07.05 |
+| `joins` | `joins-left-basic` | LEFT JOIN | SQL-07.03, SQL-07.05, SQL-07.06 |
+
+The other 11 modules display Content coming soon. The cards are an initial selection from the syllabus; further cards are still needed within these three modules as well.
 
 ## Module index
 
@@ -255,7 +270,7 @@ The levels describe lesson difficulty, not the learner's calculated proficiency.
 
 ## Use in the app and future updates
 
-Each indexed subtopic is a candidate for one or more focused flashcards using the mockup's Definition, Concept, Examples, and Syntax sections. The IDs identify curriculum entries; they do not automatically replace the future JSON/route IDs such as `joins-left-basic`. Keep that mapping explicit when the content collection is implemented.
+Each indexed subtopic is a candidate for one or more focused flashcards using the mockup's Definition, Concept, Examples, and Syntax sections. The IDs identify curriculum entries; they do not replace JSON/route IDs such as `joins-left-basic`. The implemented cards carry this mapping explicitly in `syllabusIds`; preserve it as more cards are authored.
 
 Keep the 14 parent modules as the coverage denominator described in [the syllabus coverage model](syllabus.md#coverage-model). Adding subtopics or source links does not mark a learner's topic covered or assign proficiency. Topic completion remains an explicit learner action.
 

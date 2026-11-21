@@ -1,33 +1,45 @@
 :root {
-  font-family: Inter, "Segoe UI", system-ui, sans-serif;
-  color: #182f29;
-  background: #f8f9f4;
+  font-family: "Segoe UI", Inter, system-ui, sans-serif;
+  color: #320c42;
+  background: #eee1ff;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  --ink: #320c42;
+  --muted: #665071;
+  --purple: #6820d4;
+  --line: #d8c4ed;
 }
 
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body {
   min-width: 320px;
   margin: 0;
+  background: radial-gradient(ellipse at 85% 0, #ddc5fa 0, transparent 48%), #eee1ff;
 }
 
-a {
-  color: inherit;
-}
+button, input, select { font: inherit; }
+button, a { -webkit-tap-highlight-color: transparent; }
+button { color: inherit; }
+a { color: inherit; text-underline-offset: 0.2em; }
 
+button:focus-visible,
 a:focus-visible,
-main:focus-visible {
-  outline: 3px solid #287964;
-  outline-offset: 6px;
+summary:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid #320c42;
+  outline-offset: 5px;
 }
 
-::selection {
-  color: #173d35;
-  background: #d5edb7;
+h1, h2, h3, p { overflow-wrap: break-word; }
+svg { display: block; }
+::selection { color: #fff; background: #6820d4; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    transition: none !important;
+  }
 }
