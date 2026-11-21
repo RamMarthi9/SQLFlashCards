@@ -1,63 +1,52 @@
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { loadCatalog, type Catalog } from '../content/catalog'
+import { resolveRoute } from './routes'
+import { TopicListScreen } from './screens/TopicListScreen'
+import { LearningScreen } from './screens/LearningScreen'
+import { Icon } from './components/LearningContent'
 import './App.css'
 
-export default function App() {
-  return (
-    <div className="app-shell">
-      <a className="skip-link" href="#main-content">
-        Skip to content
-      </a>
+function subscribeToRoute(onChange: () => void) {
+  window.addEventListener('hashchange', onChange)
+  return () => window.removeEventListener('hashchange', onChange)
+}
+function readHash() { return window.location.hash }
+type ContentState = { kind: 'ready'; catalog: Catalog } | { kind: 'error' }
+function readContent(loader: () => Catalog): ContentState {
+  try { return { kind: 'ready', catalog: loader() } }
+  catch { return { kind: 'error' } }
+}
 
-      <header className="site-header">
-        <a className="wordmark" href="/" aria-label="SQLFlashCards home">
-          <span className="brand-mark" aria-hidden="true">S<span>_</span></span>
-          SQLFlashCards
-        </a>
-        <span className="learning-label">Learn SQL</span>
-      </header>
+function Notice({ title, children }: { title: string; children: React.ReactNode }) {
+  const heading = useRef<HTMLHeadingElement>(null)
+  useEffect(() => { heading.current?.focus() }, [])
+  return <section className="empty-state"><h1 ref={heading} tabIndex={-1}>{title}</h1>{children}</section>
+}
 
-      <main id="main-content" tabIndex={-1}>
-        <section className="welcome" aria-labelledby="welcome-title">
-          <p className="eyebrow"><span aria-hidden="true" /> A little practice, lasting understanding</p>
-          <h1 id="welcome-title">Your SQL practice <br />starts here.</h1>
-          <p className="welcome-description">
-            One concept at a time. A growing space to learn SQL,
-            revisit what matters, and build confidence with every query.
-          </p>
-          <p className="development-note">
-            <strong>We&apos;re laying the foundation.</strong> Learning features are
-            coming in future stages.
-          </p>
-        </section>
+export default function App({ loadContent = loadCatalog }: { loadContent?: () => Catalog }) {
+  const [content, setContent] = useState(() => readContent(loadContent))
+  const hash = useSyncExternalStore(subscribeToRoute, readHash)
+  const route = content.kind === 'ready' ? resolveRoute(hash, content.catalog) : null
+  const title = route?.kind === 'card' ? route.card.title : 'Learn SQL'
+  useEffect(() => { document.title = `${title} | SQLFlashCards` }, [title])
 
-        <section className="roadmap" aria-labelledby="roadmap-title">
-          <div className="section-heading">
-            <h2 id="roadmap-title">A thoughtful way to learn</h2>
-            <span className="planned-label">Planned</span>
-          </div>
-          <ul className="feature-list">
-            <li>
-              <span className="feature-number" aria-hidden="true">01</span>
-              <h3>Learn in small steps</h3>
-              <p>Explore focused flashcards with clear explanations and SQL examples.</p>
-            </li>
-            <li>
-              <span className="feature-number" aria-hidden="true">02</span>
-              <h3>See your progress</h3>
-              <p>Keep track of covered topics and find the next concept to work on.</p>
-            </li>
-            <li>
-              <span className="feature-number" aria-hidden="true">03</span>
-              <h3>Make it stick</h3>
-              <p>Return for spaced revision and understand where your confidence is growing.</p>
-            </li>
-          </ul>
-        </section>
-      </main>
-
-      <footer className="site-footer">
-        <span>SQLFlashCards</span>
-        <span>Learn. Revisit. Understand.</span>
-      </footer>
-    </div>
-  )
+  return <div className="app-shell">
+    <a className="skip-link" href="#main-content" onClick={(event) => {
+      event.preventDefault()
+      document.getElementById('main-content')?.focus()
+    }}>Skip to content</a>
+    <header className="site-header">
+      <a className="brand" href="#/topics" aria-label="SQLFlashCards home"><Icon kind="cards" className="brand-icon" /><span>SQLFlashCards</span></a>
+      <span className="header-note">A little SQL, every day.</span>
+    </header>
+    <main id="main-content" tabIndex={-1}>
+      {content.kind === 'error' ? <Notice title="We couldn't load the cards">
+        <p>Please try loading the learning collection again.</p>
+        <button className="primary-button" onClick={() => setContent(readContent(loadContent))}>Try again</button>
+      </Notice> : route?.kind === 'topics' ? <TopicListScreen key="topics" catalog={content.catalog} />
+        : route?.kind === 'card' ? <LearningScreen key={hash} topic={route.topic} card={route.card} cards={route.cards} />
+          : <Notice key={hash} title="This card isn't available"><p>The link may be out of date. Choose a topic to continue learning.</p><a className="primary-button" href="#/topics">Back to topics</a></Notice>}
+    </main>
+    <footer className="site-footer"><span>Learn. Revisit. Understand.</span><span>Practice freely · Progress saving is coming soon</span></footer>
+  </div>
 }

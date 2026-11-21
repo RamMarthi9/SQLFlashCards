@@ -1,19 +1,19 @@
 # SQLFlashCards Low Level Design
 
-This design translates the [HLD](hld.md) and [visual mockup](app-design-reference.png) into proposed React components, TypeScript contracts, local storage records, and interaction flows. It is an implementation blueprint; the repository currently contains only the Stage 1 home screen and development/check tooling. The modules described below have not been implemented.
+This design translates the [HLD](hld.md) and [visual mockup](app-design-reference.png) into React components, content contracts, and future local storage and review flows. The first delivery step is implemented: validated bundled content, a 14-topic list, six starter cards, hash navigation, question/reveal, and four inline learning sections. Storage, completion, feedback, revision, scheduling, and proficiency contracts below remain proposed until their respective stages.
 
-The application remains a single React and TypeScript web application, with versioned JSON learning content, IndexedDB progress, planned Vercel hosting, and a planned Android Trusted Web Activity package. Content teaches general SQL and identifies database-specific syntax or behaviour in relevant examples. SQL examples are displayed, not executed. Accounts, a backend API, cloud synchronization, offline launch, and background notifications are outside this design's first implementation stages.
+The application remains a single React and TypeScript web application with versioned JSON learning content, planned IndexedDB progress, planned Vercel hosting, and a planned Android Trusted Web Activity package. Content teaches general SQL and identifies database-specific syntax or behaviour in relevant examples. SQL examples are displayed, not executed. Accounts, a backend API, cloud synchronization, offline launch, and background notifications are outside this design's first implementation stages.
 
 ## Design choices and unresolved policies
 
-The following are proposed implementation choices for this LLD:
+The content hierarchy, tile interaction, and hash navigation below are implemented. Feedback, activity records, storage, and the persistence coordinator remain proposed:
 
-| Area | Proposed choice |
+| Area | Choice and delivery status |
 | --- | --- |
 | Content hierarchy | A topic is one of the 14 syllabus groups. A flashcard tests one question/concept within a topic. `joins` contains card `joins-left-basic`, displayed as Left Join. |
 | Tile interaction | Definition, Concept, Examples, and Syntax buttons toggle one inline section panel below the tile grid. |
 | Navigation | Hash routes with validated topic/card IDs and browser Back/Forward support. No router package is currently installed. |
-| Screen state | React state/reducers and an application coordinator; no global state library is needed initially. |
+| Screen state | Transient React state and the App screen host are implemented; future persistence uses an application coordinator. No global state library is needed. |
 | Feedback | After revealing an answer, the learner chooses Need practice, With help, or Confident. These are self-reports, not automatic SQL grading. |
 | Activity records | Persist individual completed card-review events with stable IDs. The displayed card's counter is derived from those events under the eventual revision-counting policy. |
 | Storage | Native IndexedDB behind a repository interface. Persist pending submissions so retries can recover after a reload. |
@@ -24,12 +24,14 @@ These choices make the design concrete without settling the HLD's open learning 
 
 | Route | Screen | Behaviour |
 | --- | --- | --- |
-| `#/topics` | Topic list | Show syllabus coverage, covered/uncovered filters, and links to available cards. An explicit action marks a topic covered or uncovered. |
-| `#/topics/:topicId/cards/:cardId` | Learning screen | Show the mockup's topic/concept card, learning tiles, revision count, and proficiency, plus question/reveal, feedback, and previous/next controls. |
-| `#/revisions` | Due revisions | Once scheduling is enabled, list active cards with saved due dates at or before the supplied current time. |
+| `#/topics` | Topic list | Implemented: all 14 topic headings and links to available cards; topics without cards show Content coming soon. Coverage, filters, and explicit completion remain planned. |
+| `#/topics/:topicId/cards/:cardId` | Learning screen | Implemented: concept hero, question/reveal, four inline sections, and bounded previous/next controls. Review, revision count, and proficiency widgets are hidden until their later stages. |
+| `#/revisions` | Due revisions | Planned: once scheduling is enabled, list active cards with saved due dates at or before the supplied current time. Currently treated as unavailable. |
 | Unknown route or ID | Missing content view | Explain that the item is unavailable and provide a return to Topics. Never substitute an unrelated card silently. |
 
-An empty URL opens Topics. Validate that a card belongs to the route's topic. Route changes reset answer visibility, the open section, and an unsubmitted feedback draft. A submission already staged for saving stays recoverable. Back/Forward changes the route and uses the same loading/reset logic; it never creates a review event.
+An empty URL opens Topics. Validate that a card belongs to the route's topic. Route changes, browser Back/Forward, and reload reset answer visibility and the open section. No learner records are created. In the later review stage, route changes also reset unsubmitted feedback while staged submissions remain recoverable.
+
+The tree and component contracts below describe the target decomposition. The current `LearningScreen` directly owns the hero, prompt, disclosure controls, and card navigation; `LearningContent` renders section blocks and diagrams. Coverage, feedback, revisions, and proficiency components remain future work.
 
 ```text
 App
@@ -65,7 +67,7 @@ App
 | `CoverageSummary` | Active topics and explicit coverage records | Display coverage independently of proficiency and revision counts. |
 | `StatusMessage` | Loading/save/recovery state | Explain actionable failures and announce save outcomes without stealing focus. |
 
-The header, hero, four coloured tiles, revision row, and proficiency indicator preserve the mockup's hierarchy. Question/reveal and feedback controls are proposed additions needed for the HLD's practice flow. Reference tiles may contain clues; opening them does not itself count as a review. Record whether reference material was opened during the attempt so a later scoring policy can account for assisted practice.
+The current header, hero, and four coloured tiles follow the mockup's hierarchy, with question/reveal and card navigation added for practice. The revision row, proficiency indicator, and feedback controls remain planned. Reference tiles may contain clues; opening them does not count as a review. The later review stage must record whether references were used so its scoring policy can account for assisted practice.
 
 ## Layout and accessibility
 
@@ -81,7 +83,11 @@ Proposed CSS behaviour:
 - Render SQL as selectable `<pre><code>` text. Confine horizontal scrolling to code and table panels. Diagrams need an explanation of what shading means; decorative icons are hidden from assistive technology.
 - Announce saved/error states through an appropriate live region. Keep retry controls available and respect reduced-motion preferences.
 
-## Proposed module layout
+## Module layout
+
+The current flow uses `src/app/App.tsx`, `src/app/routes.ts`, `src/app/screens/TopicListScreen.tsx`, `src/app/screens/LearningScreen.tsx`, and `src/app/components/LearningContent.tsx`. `src/content/catalog.ts` owns the content types and validation/loading API for `catalog.json`; tests live beside the corresponding modules. No application-service, domain-rule, or storage directories are needed yet.
+
+The following remains the target layout as later capabilities are introduced:
 
 ```text
 src/
@@ -120,9 +126,9 @@ Tests live beside the modules they exercise. Create each future directory when i
 
 ## Content contracts
 
-The TypeScript shapes below describe proposed data contracts; they do not replace runtime validation of JSON.
+The content shape below summarizes the current catalogue, while later learner-record shapes remain proposals. Runtime validation of the imported JSON is required independently of TypeScript.
 
-Use the [SQL syllabus index](sql-syllabus-index.md) when planning card coverage and source references. Its curriculum IDs identify documented subtopics; map them deliberately to future stable topic/card IDs without changing the 14-topic completion model.
+Use the [SQL syllabus index](sql-syllabus-index.md) when planning card coverage and source references. Cards now carry explicit `syllabusIds` linking their content to documented subtopics without changing the 14-topic completion model.
 
 ```ts
 type SectionId = 'definition' | 'concept' | 'examples' | 'syntax';
@@ -148,8 +154,10 @@ interface Flashcard {
   order: number;
   question: string;
   answer: string;
+  syllabusIds: string[];
+  references: { title: string; url: string }[];
   sections: Record<SectionId, ContentBlock[]>;
-  diagram?: { asset: string; alt: string };
+  diagram?: { asset: 'left-join' | 'inner-join'; alt: string };
 }
 
 interface Catalog {
@@ -160,11 +168,13 @@ interface Catalog {
 }
 ```
 
-Use stable IDs such as `joins` and `joins-left-basic`; wording changes do not create new identities. Validate unique IDs, existing topic references, nonempty questions/answers, all four sections, table row lengths, known diagram assets, nonempty dialect labels when supplied, and supported schema version. Sort by order, with ID as a deterministic tie-breaker. A new empty topic starts uncovered and shows Content coming soon; it cannot newly be marked covered before it has learning material. If a previously covered topic loses its cards, preserve its explicit completion and history; while its topic ID remains active, its saved flag still participates in coverage. An empty catalogue produces an empty state and 0% coverage without dividing by zero.
+Use stable IDs such as `joins` and `joins-left-basic`; wording changes do not create new identities. The current validator checks unique IDs, existing topic references, nonempty questions/answers, all four sections, table row lengths, known diagram names, curriculum ID format, reference URLs, nonempty dialect labels when supplied, and supported schema version. It sorts by order, with ID as a deterministic tie-breaker. Diagram names select trusted UI renderers rather than arbitrary asset URLs. Invalid content rejects the entire catalogue with an error and retry action.
+
+Empty topics currently show Content coming soon and no card link. In the future completion stage, a new empty topic starts uncovered and cannot newly be marked covered before it has learning material. If a previously covered topic loses its cards, preserve its explicit completion and history; while its topic ID remains active, its saved flag still participates in coverage. An empty catalogue needs a safe empty state; future coverage calculation must return 0% without dividing by zero.
 
 For an engine-specific SQL block, authors supply `dialect` as a display label naming the database and version when relevant. Engine-specific questions or answers name that context in their text. Content review checks these labels and explains relevant differences; an omitted label does not guarantee compatibility with every database. This metadata supports explanation and display, not a dialect selector or query execution.
 
-Bundle content with the build and validate it in CI as well as at the loading boundary. Reject an invalid catalogue with a recoverable content error rather than silently dropping cards and changing coverage. Removed cards are omitted from active navigation and due lists, while their historical learner records are preserved. If multiple questions later need a shared concept page, add a separate Concept entity and a deliberate content migration.
+Content is bundled with the build and validated at the loading boundary; catalogue tests run in the existing check pipeline. The starter inventory and curriculum mapping are recorded in the [syllabus index](sql-syllabus-index.md#implemented-starter-cards). In the later progress stage, removed cards must be omitted from active navigation and due lists while historical learner records are preserved. If multiple questions later need a shared concept page, add a separate Concept entity and a deliberate content migration.
 
 ## Learner records and rule contracts
 
@@ -424,11 +434,11 @@ Notifications while closed require a separate delivery design and permission flo
 
 Use Vitest for pure rules and service workflows, React Testing Library for user interactions, and repository contract tests for persistence. Test IndexedDB transactions and upgrades in a real browser; the current jsdom screen test alone cannot establish their correctness. No additional test or browser-automation package has been installed by this document.
 
-Keep the existing typecheck, lint, test, and build pipeline. Later add content validation and feature tests to it. Release checks must include saved progress surviving reload, API-free learning behaviour, production asset loading, and the Android wrapper's navigation and domain association when that packaging stage is built.
+Keep the existing typecheck, lint, test, and build pipeline, now including content validation and learning-flow tests. Later release checks must add saved progress surviving reload and the Android wrapper's navigation and domain association when those stages are built. The manual browser checklist covers API-free learning, direct links, production assets, keyboard operation, and responsive layouts; record only actually executed checks in [Project status](status.md).
 
 ## Delivery sequence and boundaries
 
-1. Implement validated content, topic/card navigation, the mockup's visual components, question/reveal, and four inline learning sections.
+1. **Implemented:** validated content with six starter cards, topic/card navigation, the mockup's visual direction, question/reveal, and four inline learning sections. All 14 topics are listed; content authoring for the remaining topics is still outstanding.
 2. Implement explicit topic coverage and the IndexedDB adapter with failure handling and migrations.
 3. Finalize review qualification and feedback, then add durable review commands, event history, and count projections.
 4. Finalize schedule/proficiency policies, add due views and assessed levels, and verify their edge cases.

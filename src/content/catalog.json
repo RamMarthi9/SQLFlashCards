@@ -1,0 +1,178 @@
+{
+  "schemaVersion": 1,
+  "contentVersion": "2026-11-21.1",
+  "topics": [
+    { "id": "database-fundamentals", "title": "Database fundamentals", "order": 1 },
+    { "id": "basic-queries", "title": "Basic queries", "order": 2 },
+    { "id": "filtering", "title": "Filtering and missing values", "order": 3 },
+    { "id": "sorting-and-limiting", "title": "Sorting and limiting", "order": 4 },
+    { "id": "aggregate-functions", "title": "Aggregate functions", "order": 5 },
+    { "id": "grouping", "title": "Grouping", "order": 6 },
+    { "id": "joins", "title": "Joins", "order": 7 },
+    { "id": "subqueries-and-set-operations", "title": "Subqueries and set operations", "order": 8 },
+    { "id": "common-table-expressions", "title": "Common table expressions", "order": 9 },
+    { "id": "window-functions", "title": "Window functions", "order": 10 },
+    { "id": "expressions-and-functions", "title": "Expressions and functions", "order": 11 },
+    { "id": "schema-and-data-changes", "title": "Schema and data changes", "order": 12 },
+    { "id": "relational-design-and-transactions", "title": "Relational design and transactions", "order": 13 },
+    { "id": "performance-and-interview-practice", "title": "Performance and interview practice", "order": 14 }
+  ],
+  "cards": [
+    {
+      "id": "basic-select",
+      "topicId": "basic-queries",
+      "title": "Select columns",
+      "order": 1,
+      "question": "How do you return only employee_name and salary from the employees table?",
+      "answer": "Use SELECT employee_name, salary FROM employees; SELECT names the output columns, and FROM identifies the source table.",
+      "syllabusIds": ["SQL-02.01", "SQL-02.05"],
+      "references": [{ "title": "SQLite SELECT reference", "url": "https://www.sqlite.org/lang_select.html" }],
+      "sections": {
+        "definition": [{ "kind": "text", "text": "SELECT reads a result from data. Name the columns you need after SELECT and the source table after FROM." }],
+        "concept": [{ "kind": "text", "text": "Imagine choosing columns from a spreadsheet. The stored table stays the same. SELECT * requests every column; naming columns makes the intended output clearer." }],
+        "examples": [
+          { "kind": "text", "text": "Input: employees." },
+          { "kind": "table", "columns": ["employee_id", "employee_name", "salary"], "rows": [["1", "Asha", "50000"], ["2", "Ben", "60000"]] },
+          { "kind": "sql", "code": "SELECT employee_name, salary\nFROM employees\nORDER BY employee_id;" },
+          { "kind": "text", "text": "Result: only the two requested columns. ORDER BY fixes the displayed row order." },
+          { "kind": "table", "columns": ["employee_name", "salary"], "rows": [["Asha", "50000"], ["Ben", "60000"]] }
+        ],
+        "syntax": [
+          { "kind": "sql", "code": "SELECT employee_name, salary\nFROM employees;" },
+          { "kind": "text", "text": "End the statement with a semicolon. Without ORDER BY, do not rely on a particular row order." }
+        ]
+      }
+    },
+    {
+      "id": "basic-distinct",
+      "topicId": "basic-queries",
+      "title": "Distinct results",
+      "order": 2,
+      "question": "A department appears on several employee rows. How can you return each department just once?",
+      "answer": "Use SELECT DISTINCT department FROM employees; DISTINCT removes duplicate rows from the query result, without deleting stored employee records.",
+      "syllabusIds": ["SQL-02.04"],
+      "references": [{ "title": "SQLite DISTINCT processing", "url": "https://www.sqlite.org/lang_select.html#distinct" }],
+      "sections": {
+        "definition": [{ "kind": "text", "text": "DISTINCT keeps one copy of each distinct result row." }],
+        "concept": [{ "kind": "text", "text": "With several selected columns, the entire combination determines duplication. DISTINCT department, employee_name can still produce several rows for one department." }],
+        "examples": [
+          { "kind": "text", "text": "Input: employees." },
+          { "kind": "table", "columns": ["employee_name", "department"], "rows": [["Asha", "Sales"], ["Ben", "Sales"], ["Chen", "Support"]] },
+          { "kind": "sql", "code": "SELECT DISTINCT department\nFROM employees\nORDER BY department;" },
+          { "kind": "text", "text": "Result: Sales appears once, although two employees belong to it." },
+          { "kind": "table", "columns": ["department"], "rows": [["Sales"], ["Support"]] }
+        ],
+        "syntax": [
+          { "kind": "sql", "code": "SELECT DISTINCT department\nFROM employees;" },
+          { "kind": "text", "text": "Place DISTINCT immediately after SELECT. It changes the result, not the table." }
+        ]
+      }
+    },
+    {
+      "id": "filtering-where",
+      "topicId": "filtering",
+      "title": "Filter with WHERE",
+      "order": 1,
+      "question": "How do you return employees whose salary is at least 60000?",
+      "answer": "Add WHERE salary >= 60000. A row is included only when this condition is true; 60000 itself is included.",
+      "syllabusIds": ["SQL-03.01"],
+      "references": [{ "title": "SQLite WHERE filtering", "url": "https://www.sqlite.org/lang_select.html#whereclause" }],
+      "sections": {
+        "definition": [{ "kind": "text", "text": "WHERE keeps rows that satisfy a condition before the result is returned." }],
+        "concept": [{ "kind": "text", "text": "Compare each row's salary with the threshold. >= means greater than or equal to; > would exclude a salary of exactly 60000." }],
+        "examples": [
+          { "kind": "text", "text": "Input: employees." },
+          { "kind": "table", "columns": ["employee_id", "employee_name", "salary"], "rows": [["1", "Asha", "50000"], ["2", "Ben", "60000"], ["3", "Chen", "70000"]] },
+          { "kind": "sql", "code": "SELECT employee_name, salary\nFROM employees\nWHERE salary >= 60000\nORDER BY employee_id;" },
+          { "kind": "text", "text": "Result: Ben qualifies at the boundary; Chen qualifies above it." },
+          { "kind": "table", "columns": ["employee_name", "salary"], "rows": [["Ben", "60000"], ["Chen", "70000"]] }
+        ],
+        "syntax": [
+          { "kind": "sql", "code": "SELECT employee_name, salary\nFROM employees\nWHERE salary >= 60000;" },
+          { "kind": "text", "text": "Write WHERE after FROM. Combine conditions with AND or OR when you need more than one test." }
+        ]
+      }
+    },
+    {
+      "id": "filtering-null",
+      "topicId": "filtering",
+      "title": "Find missing values",
+      "order": 2,
+      "question": "Which condition finds employees with no department value: department = NULL or department IS NULL?",
+      "answer": "Use department IS NULL. NULL represents a missing value; an ordinary equality comparison with NULL does not evaluate to true.",
+      "syllabusIds": ["SQL-03.05"],
+      "references": [{ "title": "SQLite expression and NULL rules", "url": "https://www.sqlite.org/lang_expr.html" }],
+      "sections": {
+        "definition": [{ "kind": "text", "text": "IS NULL tests whether a value is missing. IS NOT NULL tests whether it is present." }],
+        "concept": [{ "kind": "text", "text": "NULL is not the number zero or the text 'NULL'. A comparison such as department = NULL has an unknown result, and WHERE keeps only true conditions." }],
+        "examples": [
+          { "kind": "text", "text": "Input: employees. NULL in this table means a missing database value, not a word stored as text." },
+          { "kind": "table", "columns": ["employee_id", "employee_name", "department"], "rows": [["1", "Asha", "Sales"], ["2", "Ben", "NULL"], ["3", "Chen", "Support"]] },
+          { "kind": "sql", "code": "SELECT employee_name\nFROM employees\nWHERE department IS NULL\nORDER BY employee_id;" },
+          { "kind": "text", "text": "Result: Ben is the only employee with no department value." },
+          { "kind": "table", "columns": ["employee_name"], "rows": [["Ben"]] }
+        ],
+        "syntax": [
+          { "kind": "sql", "code": "SELECT employee_name\nFROM employees\nWHERE department IS NULL;" },
+          { "kind": "text", "text": "To find recorded departments instead, change IS NULL to IS NOT NULL." }
+        ]
+      }
+    },
+    {
+      "id": "joins-inner-basic",
+      "topicId": "joins",
+      "title": "Inner Join",
+      "order": 1,
+      "question": "Which join lists customers together with their matching orders, excluding customers who have no orders?",
+      "answer": "Use INNER JOIN with a matching condition such as c.customer_id = o.customer_id. Each matching pair becomes a result row; customers with no match are omitted.",
+      "syllabusIds": ["SQL-07.01", "SQL-07.02", "SQL-07.05"],
+      "references": [{ "title": "Microsoft JOIN reference (T-SQL examples)", "url": "https://learn.microsoft.com/en-us/sql/t-sql/queries/from-transact-sql?view=sql-server-ver16" }],
+      "diagram": { "asset": "inner-join", "alt": "Only the overlap is shaded: keep matches between the two tables. This is a membership guide; the result can contain several rows per customer." },
+      "sections": {
+        "definition": [{ "kind": "text", "text": "An inner join returns pairs of rows that satisfy its join condition." }],
+        "concept": [{ "kind": "text", "text": "Match each customer's ID to the customer ID on an order. A customer with two orders appears twice; a customer with no orders does not appear." }],
+        "examples": [
+          { "kind": "text", "text": "Input: customers." },
+          { "kind": "table", "columns": ["customer_id", "customer_name"], "rows": [["1", "Asha"], ["2", "Ben"]] },
+          { "kind": "text", "text": "Input: orders." },
+          { "kind": "table", "columns": ["order_id", "customer_id"], "rows": [["101", "1"], ["102", "1"]] },
+          { "kind": "sql", "code": "SELECT c.customer_name, o.order_id\nFROM customers c\nINNER JOIN orders o\n  ON c.customer_id = o.customer_id\nORDER BY c.customer_id, o.order_id;" },
+          { "kind": "text", "text": "Result: two orders give Asha two rows. Ben has no match." },
+          { "kind": "table", "columns": ["customer_name", "order_id"], "rows": [["Asha", "101"], ["Asha", "102"]] }
+        ],
+        "syntax": [
+          { "kind": "sql", "code": "SELECT c.customer_name, o.order_id\nFROM customers c\nINNER JOIN orders o\n  ON c.customer_id = o.customer_id;" },
+          { "kind": "text", "text": "c and o are table aliases. Prefix shared column names with an alias to show which table supplies them." }
+        ]
+      }
+    },
+    {
+      "id": "joins-left-basic",
+      "topicId": "joins",
+      "title": "Left Join",
+      "order": 2,
+      "question": "How can you list every customer and any matching orders, including customers with no orders?",
+      "answer": "Put customers on the left of a LEFT JOIN. Matching orders are returned; a customer without a match still gets a row, with NULLs for the order columns.",
+      "syllabusIds": ["SQL-07.03", "SQL-07.05", "SQL-07.06"],
+      "references": [{ "title": "Microsoft LEFT JOIN reference (T-SQL examples)", "url": "https://learn.microsoft.com/en-us/sql/t-sql/queries/from-transact-sql?view=sql-server-ver16" }],
+      "diagram": { "asset": "left-join", "alt": "The whole left circle, including the overlap, is shaded: preserve every left-table row and add matching right-table data. Several matches can produce several result rows." },
+      "sections": {
+        "definition": [{ "kind": "text", "text": "A left join preserves all rows from the left table. It adds matching right-table values, or NULLs when there is no match." }],
+        "concept": [{ "kind": "text", "text": "Keep the customer list intact. Two matching orders still produce two rows for one customer. A later WHERE condition on the right table can remove unmatched rows, so choose filter placement carefully." }],
+        "examples": [
+          { "kind": "text", "text": "Input: customers." },
+          { "kind": "table", "columns": ["customer_id", "customer_name"], "rows": [["1", "Asha"], ["2", "Ben"]] },
+          { "kind": "text", "text": "Input: orders." },
+          { "kind": "table", "columns": ["order_id", "customer_id"], "rows": [["101", "1"], ["102", "1"]] },
+          { "kind": "sql", "code": "SELECT c.customer_name, o.order_id\nFROM customers c\nLEFT JOIN orders o\n  ON c.customer_id = o.customer_id\nORDER BY c.customer_id, o.order_id;" },
+          { "kind": "text", "text": "Result: Ben remains, with a missing order value. NULL is not the text 'NULL' stored in the table." },
+          { "kind": "table", "columns": ["customer_name", "order_id"], "rows": [["Asha", "101"], ["Asha", "102"], ["Ben", "NULL"]] }
+        ],
+        "syntax": [
+          { "kind": "sql", "code": "SELECT c.customer_name, o.order_id\nFROM customers c\nLEFT JOIN orders o\n  ON c.customer_id = o.customer_id;" },
+          { "kind": "text", "text": "The table before LEFT JOIN is the preserved side. LEFT OUTER JOIN is another spelling of this join." }
+        ]
+      }
+    }
+  ]
+}

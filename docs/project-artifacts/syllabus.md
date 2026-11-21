@@ -1,6 +1,6 @@
 # Planned SQL syllabus
 
-This is the educational scope for future SQLFlashCards content. Stage 1 does not load these topics into the application or persist learner completion. SQLFlashCards teaches general SQL concepts, with database-specific syntax and behaviour labelled in relevant examples. Feature availability and exact syntax can vary between databases.
+This is the educational scope for SQLFlashCards content. The app lists all 14 topics and now loads six starter cards across Basic queries, Filtering, and Joins; the other 11 topics show Content coming soon. Learner completion is not yet recorded. SQLFlashCards teaches general SQL concepts, with database-specific syntax and behaviour labelled in relevant examples. Feature availability and exact syntax can vary between databases.
 
 Use the separate [SQL syllabus index](sql-syllabus-index.md) for numbered subtopics, prerequisites, learning outcomes, keyword lookup, and researched source links. This document retains the concise 14-topic checklist and coverage model.
 
@@ -14,7 +14,7 @@ New learners start with every topic uncovered. Existing notes or source material
 Progress (%) = covered topics / total topics * 100
 ```
 
-The checklist below describes the initial learning plan, not measured user progress or a claim that app content has been implemented.
+The checklist below describes the learning plan, not measured user progress. The [implemented starter-card inventory](sql-syllabus-index.md#implemented-starter-cards) separately records which content exists in the app; six starter cards do not complete those three modules' full scope.
 
 ## Covered
 
@@ -62,4 +62,4 @@ WHERE salary > 50000;
 
 </details>
 
-This is a documentation example. The MVP will display SQL and explanations without executing user-supplied queries. Each future JSON flashcard should test one concept and include enough context to make its answer unambiguous; the exact content schema and validation will be defined in the content stage.
+This is a documentation example. The app displays SQL and explanations without executing user-supplied queries. The implemented JSON catalogue and runtime validator are described in the [LLD content contracts](lld.md#content-contracts). Each card tests one concept with a question, answer, four learning sections, explicit curriculum IDs, and source references.
