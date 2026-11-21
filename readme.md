@@ -62,6 +62,7 @@ docs/project-artifacts/
   lld.md                Low level implementation design
   architecture.md       Architecture decisions and stage boundaries
   syllabus.md           Planned SQL syllabus and example card
+  sql-syllabus-index.md Indexed SQL topics and source references
   app-design-reference.png  User's Android and web mockup
 AGENTS.md               Artifact maintenance guidance for project work
 .github/workflows/      Automated checks
@@ -81,6 +82,8 @@ The strict TypeScript, ESLint, Vite, and Vitest configuration files live at the 
 The planned learning flow is topic selection, answer reveal, performance feedback, and revision. It will distinguish covered and uncovered topics, count revisions, and report an expertise level based on performance. Revision reminders must support the requested **1, 3, 5, 7, 20, and 30 day** rule; its scheduling semantics and the expertise formula still need to be specified before implementation.
 
 All design, status, syllabus, and visual reference artifacts live in [Project artifacts](docs/project-artifacts/README.md). See [Project status](docs/project-artifacts/status.md) for progress, the [High level design](docs/project-artifacts/hld.md) for system components and delivery, the [Low level design](docs/project-artifacts/lld.md) for component contracts and interactions, [Architecture](docs/project-artifacts/architecture.md) for technical decisions, and [Planned syllabus](docs/project-artifacts/syllabus.md) for the learning scope.
+
+The separate [SQL syllabus index](docs/project-artifacts/sql-syllabus-index.md) contains numbered subtopics, learning outcomes, prerequisites, and source references.
 
 ## Contributing
 

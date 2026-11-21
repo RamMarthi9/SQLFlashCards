@@ -6,6 +6,8 @@ This design follows the [architecture decisions](architecture.md), [14-topic syl
 
 See the [Low level design](lld.md) for proposed components, TypeScript contracts, storage transactions, screen interactions, and implementation checks.
 
+The separate [SQL syllabus index](sql-syllabus-index.md) expands the same 14 learning modules into numbered subtopics with outcomes and source references. It does not change the topic-coverage denominator or indicate that flashcard content is implemented.
+
 ## Product scope
 
 The learning experience will provide topic selection, questions and answer reveal, Definition, Concept, Examples, and Syntax sections, performance feedback, covered/uncovered topics, revision counts, and proficiency levels. Revision scheduling must support the requested 1, 3, 5, 7, 20, and 30 day rule once its timing semantics are defined.

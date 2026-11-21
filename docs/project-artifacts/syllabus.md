@@ -2,6 +2,8 @@
 
 This is the educational scope for future SQLFlashCards content. Stage 1 does not load these topics into the application or persist learner completion. SQLFlashCards teaches general SQL concepts, with database-specific syntax and behaviour labelled in relevant examples. Feature availability and exact syntax can vary between databases.
 
+Use the separate [SQL syllabus index](sql-syllabus-index.md) for numbered subtopics, prerequisites, learning outcomes, keyword lookup, and researched source links. This document retains the concise 14-topic checklist and coverage model.
+
 ## Coverage model
 
 A topic will be **covered** when the learner explicitly marks it complete and **uncovered** otherwise. A learner can return a topic to uncovered. Completion is separate from understanding: a covered topic can still contain cards that need revision.
@@ -27,11 +29,11 @@ No topics are marked covered in this initial plan.
 - [ ] **5. Aggregate functions:** `COUNT`, `SUM`, `AVG`, `MIN`, and `MAX`.
 - [ ] **6. Grouping:** `GROUP BY`, `HAVING`, and the difference between row and group filtering.
 - [ ] **7. Joins:** inner, left, right, full outer, cross, and self joins.
-- [ ] **8. Subqueries and set operations:** nested queries, correlated subqueries, `EXISTS`, `UNION`, and `UNION ALL`.
+- [ ] **8. Subqueries and set operations:** nested queries, correlated subqueries, `EXISTS`, `UNION`, `UNION ALL`, intersection, and dialect-specific set difference.
 - [ ] **9. Common table expressions:** `WITH` and an introduction to recursive CTEs.
 - [ ] **10. Window functions:** `OVER`, `PARTITION BY`, `ROW_NUMBER`, `RANK`, `DENSE_RANK`, `LEAD`, and `LAG`.
 - [ ] **11. Expressions and functions:** `CASE`, `COALESCE`, and common string, numeric, and date functions.
-- [ ] **12. Schema and data changes:** data types, `CREATE`, `ALTER`, `DROP`, `INSERT`, `UPDATE`, `DELETE`, and constraints.
+- [ ] **12. Schema and data changes:** data types, `CREATE`, `ALTER`, `DROP`, `INSERT`, `UPDATE`, `DELETE`, constraints, and basic views.
 - [ ] **13. Relational design and transactions:** keys, relationships, normalization basics, ACID, `COMMIT`, and `ROLLBACK`.
 - [ ] **14. Performance and interview practice:** indexes, query plans, duplicate detection, highest-salary questions, and query debugging.
 

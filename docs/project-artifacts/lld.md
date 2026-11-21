@@ -122,6 +122,8 @@ Tests live beside the modules they exercise. Create each future directory when i
 
 The TypeScript shapes below describe proposed data contracts; they do not replace runtime validation of JSON.
 
+Use the [SQL syllabus index](sql-syllabus-index.md) when planning card coverage and source references. Its curriculum IDs identify documented subtopics; map them deliberately to future stable topic/card IDs without changing the 14-topic completion model.
+
 ```ts
 type SectionId = 'definition' | 'concept' | 'examples' | 'syntax';
 type Feedback = 'needPractice' | 'withHelp' | 'confident';

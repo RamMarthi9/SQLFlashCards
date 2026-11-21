@@ -9,6 +9,7 @@ This folder is the canonical home for the project's design documents, learning s
 | [Low level design](lld.md) | Screens, component contracts, data structures, storage transactions, failure handling, and tests. | Implementation details or interactions are decided or changed. |
 | [Architecture](architecture.md) | Agreed technical direction, implementation boundaries, and mockup interpretation. | Architecture decisions or implemented-stage boundaries change. |
 | [Planned syllabus](syllabus.md) | The 14-topic general SQL learning scope and example card. | Topic scope, coverage semantics, or educational requirements change. |
+| [SQL syllabus index](sql-syllabus-index.md) | Numbered subtopics, prerequisites, outcomes, keyword lookup, and primary source references for the 14 modules. | Detailed learning scope or supporting references change. |
 | [App mockup](app-design-reference.png) | The user's visual reference for Android and web. | The user supplies or approves a revised visual reference. |
 
 The HLD and LLD describe planned features as well as the current foundation; they are not claims that the full application exists. Start with [Project status](status.md) to see what is implemented. Local run commands and setup instructions remain in the [repository README](../../readme.md).
