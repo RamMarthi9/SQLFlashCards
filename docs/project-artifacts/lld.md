@@ -2,7 +2,7 @@
 
 This design translates the [HLD](hld.md) and [visual mockup](app-design-reference.png) into proposed React components, TypeScript contracts, local storage records, and interaction flows. It is an implementation blueprint; the repository currently contains only the Stage 1 home screen and development/check tooling. The modules described below have not been implemented.
 
-The application remains a single React and TypeScript web application, with versioned JSON learning content, IndexedDB progress, planned Vercel hosting, and a planned Android Trusted Web Activity package. SQL examples are displayed, not executed. Accounts, a backend API, cloud synchronization, offline launch, and background notifications are outside this design's first implementation stages.
+The application remains a single React and TypeScript web application, with versioned JSON learning content, IndexedDB progress, planned Vercel hosting, and a planned Android Trusted Web Activity package. Content teaches general SQL and identifies database-specific syntax or behaviour in relevant examples. SQL examples are displayed, not executed. Accounts, a backend API, cloud synchronization, offline launch, and background notifications are outside this design's first implementation stages.
 
 ## Design choices and unresolved policies
 
@@ -57,7 +57,7 @@ App
 | `TopicHero` | Card title and optional diagram | Display the purple hero and meaningful diagram alternative text. |
 | `StudyPrompt` | Question, answer, `answerRevealed` | Emit `onReveal`; render the answer only after reveal. |
 | `LearningTiles` | Active section ID | Emit `onToggle(section)`; opening the same section again closes it. |
-| `LearningSectionPanel` | Section title and structured content blocks | Render text, SQL, and example tables without injecting HTML. |
+| `LearningSectionPanel` | Section title and structured content blocks | Render text, SQL, and example tables without injecting HTML; show a SQL block's dialect label when supplied. |
 | `ReviewFeedback` | Answer visibility, submission status | Emit one feedback value; disable repeated submission while saving or after success. |
 | `RevisionSummary` | Derived count and its scope | Show the current card's count with a clear accessible label. No hard-coded 3. |
 | `ProficiencyIndicator` | Assessed level and explanation, or insufficient evidence | Display a read-only result when assessment is enabled. No selectable difficulty tabs and no default Intermediate. |
@@ -130,7 +130,7 @@ type Instant = string; // Canonical UTC timestamp, e.g. Date.toISOString()
 
 type ContentBlock =
   | { kind: 'text'; text: string }
-  | { kind: 'sql'; code: string }
+  | { kind: 'sql'; code: string; dialect?: string }
   | { kind: 'table'; columns: string[]; rows: string[][] };
 
 interface Topic {
@@ -158,7 +158,9 @@ interface Catalog {
 }
 ```
 
-Use stable IDs such as `joins` and `joins-left-basic`; wording changes do not create new identities. Validate unique IDs, existing topic references, nonempty questions/answers, all four sections, table row lengths, known diagram assets, and supported schema version. Sort by order, with ID as a deterministic tie-breaker. A new empty topic starts uncovered and shows Content coming soon; it cannot newly be marked covered before it has learning material. If a previously covered topic loses its cards, preserve its explicit completion and history; while its topic ID remains active, its saved flag still participates in coverage. An empty catalogue produces an empty state and 0% coverage without dividing by zero.
+Use stable IDs such as `joins` and `joins-left-basic`; wording changes do not create new identities. Validate unique IDs, existing topic references, nonempty questions/answers, all four sections, table row lengths, known diagram assets, nonempty dialect labels when supplied, and supported schema version. Sort by order, with ID as a deterministic tie-breaker. A new empty topic starts uncovered and shows Content coming soon; it cannot newly be marked covered before it has learning material. If a previously covered topic loses its cards, preserve its explicit completion and history; while its topic ID remains active, its saved flag still participates in coverage. An empty catalogue produces an empty state and 0% coverage without dividing by zero.
+
+For an engine-specific SQL block, authors supply `dialect` as a display label naming the database and version when relevant. Engine-specific questions or answers name that context in their text. Content review checks these labels and explains relevant differences; an omitted label does not guarantee compatibility with every database. This metadata supports explanation and display, not a dialect selector or query execution.
 
 Bundle content with the build and validate it in CI as well as at the loading boundary. Reject an invalid catalogue with a recoverable content error rather than silently dropping cards and changing coverage. Removed cards are omitted from active navigation and due lists, while their historical learner records are preserved. If multiple questions later need a shared concept page, add a separate Concept entity and a deliberate content migration.
 

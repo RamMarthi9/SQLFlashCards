@@ -1,6 +1,6 @@
 # SQLFlashCards
 
-SQLFlashCards is a PostgreSQL learning app being built around short flashcards, syllabus coverage, and spaced revision.
+SQLFlashCards is a SQL learning app being built around short flashcards, syllabus coverage, and spaced revision.
 
 **Stage 1: application foundation.** The repository now provides a React, TypeScript, and Vite scaffold with a static app shell, strict type checking, linting, a render smoke test, and a production build. Flashcard interaction, progress storage, reminders, revision counts, and expertise scoring are future work.
 
@@ -61,7 +61,7 @@ docs/project-artifacts/
   hld.md                High level system design
   lld.md                Low level implementation design
   architecture.md       Architecture decisions and stage boundaries
-  syllabus.md           Planned PostgreSQL syllabus and example card
+  syllabus.md           Planned SQL syllabus and example card
   app-design-reference.png  User's Android and web mockup
 AGENTS.md               Artifact maintenance guidance for project work
 .github/workflows/      Automated checks
@@ -75,7 +75,7 @@ The strict TypeScript, ESLint, Vite, and Vitest configuration files live at the 
 - React and strict TypeScript provide the interface; Vite handles local development and builds.
 - GitHub is the source of truth for code, versioned JSON flashcards, tests, and documentation.
 - IndexedDB will store learner progress. Cloud accounts and synchronization are a later phase.
-- PostgreSQL is the primary teaching dialect. The MVP will display SQL examples without executing user-supplied SQL.
+- Teach SQL concepts broadly, with no single database engine as the default teaching dialect. Label database-specific syntax where needed. The MVP will display SQL examples without executing user-supplied SQL.
 - Vercel will host the web application in a later deployment stage. Android distribution will use a Trusted Web Activity through Bubblewrap in a later stage.
 
 The planned learning flow is topic selection, answer reveal, performance feedback, and revision. It will distinguish covered and uncovered topics, count revisions, and report an expertise level based on performance. Revision reminders must support the requested **1, 3, 5, 7, 20, and 30 day** rule; its scheduling semantics and the expertise formula still need to be specified before implementation.

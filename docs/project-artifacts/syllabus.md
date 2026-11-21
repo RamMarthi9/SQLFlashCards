@@ -1,6 +1,6 @@
-# Planned PostgreSQL syllabus
+# Planned SQL syllabus
 
-This is the educational scope for future SQLFlashCards content. Stage 1 does not load these topics into the application or persist learner completion. PostgreSQL is the primary teaching dialect; label any examples that deliberately use another dialect.
+This is the educational scope for future SQLFlashCards content. Stage 1 does not load these topics into the application or persist learner completion. SQLFlashCards teaches general SQL concepts, with database-specific syntax and behaviour labelled in relevant examples. Feature availability and exact syntax can vary between databases.
 
 ## Coverage model
 
@@ -23,7 +23,7 @@ No topics are marked covered in this initial plan.
 - [ ] **1. Database fundamentals:** databases, tables, rows, columns, relational concepts, and SQL command categories.
 - [ ] **2. Basic queries:** `SELECT`, `FROM`, aliases, and `DISTINCT`.
 - [ ] **3. Filtering:** `WHERE`, comparison and logical operators, `IN`, `BETWEEN`, `LIKE`, and `IS NULL`.
-- [ ] **4. Sorting and limiting:** `ORDER BY`, ascending and descending order, and `LIMIT`.
+- [ ] **4. Sorting and limiting:** `ORDER BY`, ascending and descending order, and row-limiting syntax appropriate to the database, such as `LIMIT`.
 - [ ] **5. Aggregate functions:** `COUNT`, `SUM`, `AVG`, `MIN`, and `MAX`.
 - [ ] **6. Grouping:** `GROUP BY`, `HAVING`, and the difference between row and group filtering.
 - [ ] **7. Joins:** inner, left, right, full outer, cross, and self joins.
@@ -39,7 +39,7 @@ No topics are marked covered in this initial plan.
 
 ## Example card
 
-**Topic:** Filtering | **Difficulty:** Beginner | **Dialect:** PostgreSQL
+**Topic:** Filtering | **Difficulty:** Beginner
 
 **Question:** How do you retrieve employees whose salary is greater than 50,000?
 

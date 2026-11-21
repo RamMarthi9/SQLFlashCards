@@ -2,7 +2,7 @@
   "name": "sqlflashcards",
   "private": true,
   "version": "0.1.0",
-  "description": "A PostgreSQL learning app built around flashcards and deliberate revision.",
+  "description": "A SQL learning app built around flashcards and deliberate revision.",
   "type": "module",
   "engines": {
     "node": "^22.13.0 || ^24.0.0 || >=26.0.0",

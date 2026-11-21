@@ -12,7 +12,7 @@ export default function App() {
           <span className="brand-mark" aria-hidden="true">S<span>_</span></span>
           SQLFlashCards
         </a>
-        <span className="dialect-label">Made for PostgreSQL</span>
+        <span className="learning-label">Learn SQL</span>
       </header>
 
       <main id="main-content" tabIndex={-1}>
@@ -20,7 +20,7 @@ export default function App() {
           <p className="eyebrow"><span aria-hidden="true" /> A little practice, lasting understanding</p>
           <h1 id="welcome-title">Your SQL practice <br />starts here.</h1>
           <p className="welcome-description">
-            One concept at a time. A growing space to learn PostgreSQL,
+            One concept at a time. A growing space to learn SQL,
             revisit what matters, and build confidence with every query.
           </p>
           <p className="development-note">
@@ -38,7 +38,7 @@ export default function App() {
             <li>
               <span className="feature-number" aria-hidden="true">01</span>
               <h3>Learn in small steps</h3>
-              <p>Explore focused flashcards with clear explanations and PostgreSQL examples.</p>
+              <p>Explore focused flashcards with clear explanations and SQL examples.</p>
             </li>
             <li>
               <span className="feature-number" aria-hidden="true">02</span>

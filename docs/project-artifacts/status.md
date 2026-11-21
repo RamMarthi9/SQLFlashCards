@@ -1,14 +1,15 @@
 # SQLFlashCards Project Status
 
-Last updated: November 19, 2026.
+Last updated: November 21, 2026.
 
-The application is at Stage 1: a static home screen and development/check tooling. The architecture, HLD, LLD, syllabus, and supplied mockup are documented; the learning experience remains to be implemented. The current code baseline is commit `59d115f`, the Stage 1 merge.
+The application is at Stage 1: a static home screen and development/check tooling. It is a general SQL learning app, with database-specific syntax labelled when relevant. The architecture, HLD, LLD, syllabus, and supplied mockup are documented; the learning experience remains to be implemented. The foundation was introduced in commit `59d115f`, the Stage 1 merge; subsequent scope and documentation changes are recorded below.
 
 ## Completed
 
 - React and strict TypeScript foundation, Vite development/build setup, ESLint, Vitest, and a home-screen test.
 - GitHub Actions configuration for type checking, linting, tests, and the production build.
-- A documented 14-topic PostgreSQL syllabus and example flashcard.
+- A documented 14-topic SQL syllabus and example flashcard.
+- App copy, page metadata, and project guidance aligned with the user's general SQL learning scope.
 - The user's Android/web visual reference, plus HLD and LLD documents describing the planned system.
 - A single project-artifacts folder, an index, and maintenance guidance for future project work.
 
@@ -35,6 +36,7 @@ The LLD proposes specific screen interactions and contracts. These are design pr
 | November 19, 2026 | Artifact consolidation and documentation review. | The five existing artifacts were moved with matching SHA-256 hashes before updating location guidance. Cross-links and repository references were checked. No application code changed and no application tests were rerun for this documentation-only task. |
 | November 19, 2026 | Pre-publication documentation checks. | All 27 local documentation links across 9 Markdown files resolved, including heading anchors; `git diff --check` passed. The publication changes contain only project documentation, the supplied mockup, and maintenance instructions. |
 | November 19, 2026 | [GitHub Actions run 44578008968](https://github.com/RamMarthi9/SQLFlashCards/actions/runs/44578008968) for artifact commit `e1afa89`. | The Checks workflow completed successfully, including type checking, linting, tests, and the production build. This result belongs to that commit; use the publication PR for the latest head's checks. |
+| November 21, 2026 | Local validation after correcting the SQL learning scope. | `npm.cmd run check` passed type checking, linting, one Vitest test, and the production build. All 27 local documentation links passed; diff whitespace checks passed. Source/document review found no remaining engine-default product wording, and the original mockup's SHA-256 hash is unchanged. |
 
 Browser visual testing, deployment, and Android device testing have not been verified in this documentation work. The repository README separately records a dependency advisory dated November 18, 2026; that audit was not rerun here.
 
@@ -50,5 +52,6 @@ The artifact collection and maintenance instructions were published through [pul
 | November 19, 2026 | Consolidated the designs, syllabus, architecture, and original mockup in this folder; added an index, status record, and maintenance instructions. |
 | November 19, 2026 | Added the requested daily maintenance rule: append history on days the project changes, update affected designs in place, and publish artifact updates with the related GitHub changes. |
 | November 19, 2026 | Published the collection in GitHub PR 2 and recorded the successful checks for its initial artifact commit. |
+| November 21, 2026 | Corrected the app, page/package descriptions, syllabus, HLD, LLD, architecture, and maintenance guidance to teach SQL broadly, with database-specific examples labelled where relevant. Preserved the original mockup and existing learning-feature scope. |
 
 Update this record as project work progresses, replacing stale current-state statements and adding actual verification evidence. Keep design-document completion separate from implemented application functionality.

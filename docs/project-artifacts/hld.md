@@ -1,6 +1,6 @@
 # SQLFlashCards High Level Design
 
-SQLFlashCards will use one React and TypeScript web application for desktop browsers and Android. It will teach PostgreSQL through flashcards, track syllabus coverage, and help learners revise. Learning content will ship with the app; learner progress will be stored locally on the device.
+SQLFlashCards will use one React and TypeScript web application for desktop browsers and Android. It will teach SQL through flashcards, track syllabus coverage, and help learners revise. Learning content will ship with the app; learner progress will be stored locally on the device.
 
 This design follows the [architecture decisions](architecture.md), [14-topic syllabus](syllabus.md), and [user's visual mockup](app-design-reference.png). The current implementation contains only the home screen and development/check tooling. The learning components, storage, hosting, and Android package below are planned.
 
@@ -10,7 +10,7 @@ See the [Low level design](lld.md) for proposed components, TypeScript contracts
 
 The learning experience will provide topic selection, questions and answer reveal, Definition, Concept, Examples, and Syntax sections, performance feedback, covered/uncovered topics, revision counts, and proficiency levels. Revision scheduling must support the requested 1, 3, 5, 7, 20, and 30 day rule once its timing semantics are defined.
 
-The first release will display SQL examples without executing queries. It will use local progress without accounts or cloud synchronization. PostgreSQL is the teaching dialect; the app does not require a PostgreSQL server.
+The first release will display SQL examples without executing queries. It will use local progress without accounts or cloud synchronization. The learning scope is general SQL; examples identify the relevant database when syntax or behaviour is engine-specific. The app does not require a database server.
 
 ## System structure
 

@@ -2,6 +2,8 @@
 
 The user requested that project artifacts stay together and be updated as the project progresses. Their canonical location is `docs/project-artifacts/`; begin with its [index](docs/project-artifacts/README.md) and [status](docs/project-artifacts/status.md).
 
+SQLFlashCards is a general SQL learning app. Keep product copy, syllabus, and designs focused on SQL concepts; do not designate a single database engine as the primary teaching dialect. Label database-specific examples when syntax or behaviour differs, without claiming that every query works unchanged on every engine.
+
 - During project work, read the relevant HLD, LLD, architecture, syllabus, and visual reference before changing their corresponding implementation.
 - Update affected artifacts in the same change when behaviour, requirements, decisions, scope, delivery, or verification status changes. Keep the HLD, LLD, architecture, and syllabus consistent with one another and with the code.
 - Update status.md for meaningful progress, recording completed work, the next step, unresolved decisions, and actual checks performed. Distinguish implemented features from proposed designs; do not report a configured check as a passing run.

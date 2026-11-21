@@ -15,7 +15,7 @@ The application is developed and checked locally. Hosting setup, service purchas
 | Interface | React and TypeScript with strict type checking | Scaffolded |
 | Development and build | Vite | Configured |
 | Source of truth | GitHub for code, content, tests, and documentation | Repository and PR workflow |
-| Learning content | Versioned JSON in Git, with PostgreSQL as the primary dialect | Planned |
+| Learning content | General SQL topics in versioned JSON in Git; label database-specific syntax and behaviour in relevant examples | Planned |
 | Learner progress | IndexedDB in the browser | Planned |
 | Web hosting | Vercel | Planned; no deployment |
 | Android distribution | Trusted Web Activity through Bubblewrap | Planned; no Android package |
@@ -48,7 +48,7 @@ As later stages introduce behavior, use these boundaries:
 | UI: `src/app/` | Render learning state and handle user actions | Delegate scheduling and scoring to the domain layer. |
 | Domain: future `src/domain/` | Pure rules for progress, revision scheduling, counts, and expertise | No React, browser storage, network calls, or implicit system clock. Pass dates and other inputs explicitly. |
 | Storage: future `src/storage/` | IndexedDB access, persistence, and data migrations | Implement interfaces consumed by application services; keep database details out of components and domain rules. |
-| Content: future versioned JSON | Reviewed questions, answers, explanations, and SQL examples | Keep content separate from learner records; validate content when its stage is implemented. |
+| Content: future versioned JSON | Reviewed questions, answers, explanations, and SQL examples | Keep content separate from learner records; identify database-specific examples and validate content when its stage is implemented. |
 
 The future domain and storage directories are intentionally not created in Stage 1. Their interfaces should follow the requirements of the stage that introduces them, rather than introducing unused abstractions now.
 
