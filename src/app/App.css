@@ -89,6 +89,41 @@ h1 {
   line-height: 1.6;
 }
 
+.progress-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px 28px;
+  margin: 0 0 24px;
+  padding: 24px;
+  border: 1px solid #cfb0ed;
+  border-radius: 24px;
+  background: #fcf9ff;
+}
+
+.progress-summary h2, .study-completion h2 { margin: 0; font-size: 1.3rem; }
+.progress-summary p, .study-completion p { margin: 10px 0 0; color: var(--muted); line-height: 1.6; }
+.progress-summary .eyebrow { margin: 0 0 10px; }
+.progress-meter { display: grid; gap: 12px; min-width: 180px; flex: 1 1 180px; max-width: 280px; }
+.progress-meter strong { color: #5a16af; }
+.progress-meter progress { display: block; width: 100%; height: 14px; accent-color: #6820d4; }
+.progress-summary .storage-note { flex-basis: 100%; margin: 0; font-size: .875rem; }
+.topic-filters { display: flex; flex-wrap: wrap; gap: 10px; margin: 0 0 24px; }
+.filter-button { min-height: 44px; padding: 10px 18px; border: 1px solid #a77acb; border-radius: 24px; background: #fcf9ff; font-weight: 650; cursor: pointer; }
+.filter-button[aria-pressed="true"] { background: #6722c8; border-color: #6722c8; color: white; }
+.topic-completion { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; width: 100%; margin-top: 20px; }
+.completion-badge { display: inline-block; padding: 5px 10px; border-radius: 8px; color: #644377; background: #ede1f7; font-size: .8125rem; font-weight: 650; }
+.completion-badge--done { color: #124f3d; background: #c5f8e5; }
+.completion-button { font-size: .875rem; }
+button:disabled { cursor: not-allowed; opacity: .6; }
+.progress-announcement { margin: 0; color: #245842; line-height: 1.6; }
+.progress-announcement:not(:empty) { margin-bottom: 16px; }
+.progress-error { margin: 0 0 20px; padding: 20px; border: 1px solid #a7506b; border-radius: 16px; background: #fff2f5; color: #662039; }
+.progress-error p { margin: 0 0 12px; line-height: 1.6; }
+.study-completion { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 20px; margin: 28px 0; padding: 24px; border: 1px solid #cfb0ed; border-radius: 24px; background: #fcf9ff; }
+.study-completion .topic-completion { width: auto; margin-top: 0; }
+
 .topic-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

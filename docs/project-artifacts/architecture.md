@@ -1,10 +1,10 @@
 # Architecture
 
-SQLFlashCards uses a staged implementation. This document records the agreed architecture and distinguishes the first working learning flow from future progress and delivery features.
+SQLFlashCards uses a staged implementation. This document records the agreed architecture and distinguishes the working learning flow and saved topic completion from future review and delivery features.
 
 ## Current implementation scope
 
-The Stage 1 foundation provides React, strict TypeScript, Vite, ESLint, Vitest, a dependency lockfile, and CI checks. The first learning flow now loads validated versioned JSON with all 14 syllabus topics and six starter cards across Basic queries, Filtering, and Joins. Learners can choose a topic, reveal answers, toggle four learning sections, and navigate between cards. Empty topics display Content coming soon. This stage does not track completion, schedule reminders, or store learner data.
+The Stage 1 foundation provides React, strict TypeScript, Vite, ESLint, Vitest, a dependency lockfile, and CI checks. The learning flow loads validated versioned JSON with all 14 syllabus topics and six starter cards across Basic queries, Filtering, and Joins. Learners can choose a topic, reveal answers, toggle four learning sections, and navigate between cards. Empty topics display Content coming soon. Explicit Completed/Incomplete choices, list filters, and a completion summary now use local IndexedDB storage. Review history, reminders, and proficiency remain future stages.
 
 The application is developed and checked locally. Hosting setup, service purchases, Android packaging, and public releases are outside this stage.
 
@@ -16,7 +16,7 @@ The application is developed and checked locally. Hosting setup, service purchas
 | Development and build | Vite | Configured |
 | Source of truth | GitHub for code, content, tests, and documentation | Repository and PR workflow |
 | Learning content | General SQL topics in versioned JSON in Git; label database-specific syntax and behaviour in relevant examples | Runtime-validated catalogue with six starter cards and curriculum mappings |
-| Learner progress | IndexedDB in the browser | Planned |
+| Learner progress | IndexedDB in the browser, behind a repository interface | Explicit topic completion implemented; review history remains planned |
 | Web hosting | Vercel | Planned; no deployment |
 | Android distribution | Trusted Web Activity through Bubblewrap | Planned; no Android package |
 | Accounts and synchronization | A later cloud phase | Deferred |
@@ -39,24 +39,25 @@ Left Join is implemented as a starter card, while the count of 3 and the highlig
 
 ## Module boundaries
 
-`src/main.tsx` mounts React. `src/app/` contains the screen host, hash-route handling, topic and learning screens, content rendering, styling, and interaction tests. `src/content/` owns the JSON catalogue, content types, loader, runtime validation, and content tests. Shared styling lives in `src/styles.css`; test setup lives in `src/test/`. Keep configuration at the repository root and project design, status, reference, and educational artifacts in `docs/project-artifacts/`.
+`src/main.tsx` mounts React. `src/app/` contains the screen host, hash-route handling, topic and learning screens, content rendering, styling, and interaction tests. `src/content/` owns the JSON catalogue, content types, loader, runtime validation, and content tests. `src/app/useTopicProgress.ts` coordinates saved state and completion actions for the screens; `src/domain/progress.ts` defines the progress and repository contracts, and `src/storage/indexedDbProgress.ts` implements IndexedDB access. Shared styling lives in `src/styles.css`; test setup lives in `src/test/`. Keep configuration at the repository root and project design, status, reference, and educational artifacts in `docs/project-artifacts/`.
 
-As later stages introduce behavior, use these boundaries:
+The current progress feature and later stages use these boundaries:
 
 | Boundary | Responsibility | Constraints |
 | --- | --- | --- |
 | UI: `src/app/` | Render learning state and handle user actions | Delegate scheduling and scoring to the domain layer. |
-| Domain: future `src/domain/` | Pure rules for progress, revision scheduling, counts, and expertise | No React, browser storage, network calls, or implicit system clock. Pass dates and other inputs explicitly. |
-| Storage: future `src/storage/` | IndexedDB access, persistence, and data migrations | Implement interfaces consumed by application services; keep database details out of components and domain rules. |
+| Domain: `src/domain/` | Progress and repository contracts; later pure revision scheduling, counts, and expertise | No React, browser storage, network calls, or implicit system clock. Pass dates and other inputs explicitly. |
+| Storage: `src/storage/` | IndexedDB access, persistence, and schema upgrades | Implement interfaces consumed by the progress coordinator; keep database details out of components and domain rules. |
 | Content: `src/content/` | Versioned JSON questions, answers, explanations, tables, SQL examples, and syllabus IDs | Validate before rendering; reject invalid catalogues rather than silently dropping cards. Keep content separate from future learner records and identify database-specific examples. |
 
-The future domain and storage directories are intentionally not created for the content/reveal flow. Their interfaces should follow the requirements of the stage that introduces them. Hash routes validate both card and topic identity; direct links, refresh, and browser history load the requested content without retaining transient answers or open sections.
+The native IndexedDB adapter creates database `sqlflashcards` at schema version 1 with only the `topicProgress` store. Review-event, schedule, and policy stores are deferred until those features need them. Save acknowledgement follows transaction completion. A version comparison in the same readwrite transaction rejects stale changes from another tab; focus/visibility refresh keeps the displayed state current but is not the concurrency safeguard. Blocked upgrades, unavailable storage, failed writes, and invalid saved records produce actionable errors without automatic database deletion. Old connections close on `versionchange`.
+
+Hash routes validate both card and topic identity; direct links, refresh, and browser history load the requested content without retaining transient answers or open sections. Explicit topic completion is independent of that transient state. All active topics count in the summary; missing records mean incomplete, retired records remain stored but excluded, and topics without cards cannot be newly completed. Storage belongs to the same origin and browser profile; it is not backup, cross-device synchronization, or an offline-launch mechanism.
 
 ## Learning requirements for later stages
 
-- Separate covered and uncovered syllabus views, with completion independent of mastery.
 - Performance feedback and durable review history extending the implemented answer-reveal flow.
-- Saved local progress in IndexedDB, including topic completion and revision history.
+- Durable revision history extending the implemented local topic-completion store.
 - A visible count of how many times each topic has been revised.
 - An expertise level for each topic derived from performance, with an explanation the learner can understand.
 - Revision reminders following the requested 1, 3, 5, 7, 20, and 30 day rule.

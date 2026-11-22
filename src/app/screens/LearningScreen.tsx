@@ -2,11 +2,13 @@ import { useEffect, useRef, useState } from 'react'
 import { sectionIds, type Flashcard, type SectionId, type Topic } from '../../content/catalog'
 import { cardHref } from '../routes'
 import { ContentBlocks, Icon, JoinDiagram } from '../components/LearningContent'
+import { TopicCompletion } from '../components/TopicCompletion'
+import type { TopicProgressController } from '../useTopicProgress'
 
 const sectionLabels: Record<SectionId, string> = { definition: 'Definition', concept: 'Concept', examples: 'Examples', syntax: 'Syntax' }
 const sectionHints: Record<SectionId, string> = { definition: 'What it means', concept: 'How it works', examples: 'See it in action', syntax: 'Write the query' }
 
-export function LearningScreen({ topic, card, cards }: { topic: Topic; card: Flashcard; cards: Flashcard[] }) {
+export function LearningScreen({ topic, card, cards, progress }: { topic: Topic; card: Flashcard; cards: Flashcard[]; progress: TopicProgressController }) {
   const [revealed, setRevealed] = useState(false)
   const [activeSection, setActiveSection] = useState<SectionId | null>(null)
   const heading = useRef<HTMLHeadingElement>(null)
@@ -38,6 +40,7 @@ export function LearningScreen({ topic, card, cards }: { topic: Topic; card: Fla
       {previous ? <a className="nav-button" href={cardHref(previous)}>Previous card</a> : <span className="nav-button nav-button--disabled" aria-disabled="true">Previous card</span>}<span className="card-position">{position + 1} / {cards.length}</span>
       {next ? <a className="nav-button" href={cardHref(next)}>Next card</a> : <span className="nav-button nav-button--disabled" aria-disabled="true">Next card</span>}
     </nav>
+    <section className="study-completion" aria-label="Topic progress"><div><h2>{topic.title}</h2><p>Ready to move on? Mark this topic completed, or return to it later.</p></div><TopicCompletion topic={topic} hasCards={cards.length > 0} progress={progress} /></section>
     {card.references && <details className="card-sources"><summary>Sources &amp; syllabus</summary><p>Curriculum: {card.syllabusIds.join(', ')}</p><ul>{card.references.map((reference) => <li key={reference.url}><a href={reference.url} target="_blank" rel="noreferrer">{reference.title} (opens in a new tab)</a></li>)}</ul></details>}
   </>
 }

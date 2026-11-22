@@ -14,7 +14,7 @@ The index describes the full learning plan, not learner progress or a claim that
 
 ## Implemented starter cards
 
-The bundled catalogue contains 14 topic records and these six cards. Each has Definition, Concept, Examples, and Syntax sections, with example input/result tables and primary references. Availability is separate from completion; the app does not yet record learner progress.
+The bundled catalogue contains 14 topic records and these six cards. Each has Definition, Concept, Examples, and Syntax sections, with example input/result tables and primary references. Availability is separate from completion: the app saves the learner's explicit Completed/Incomplete choices locally, without treating card availability or reading as completion. See the [coverage model](syllabus.md#coverage-model).
 
 | Topic ID | Card ID | Concept | Curriculum IDs |
 | --- | --- | --- | --- |
