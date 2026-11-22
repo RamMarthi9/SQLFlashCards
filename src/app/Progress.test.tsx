@@ -109,6 +109,27 @@ test('returns keyboard focus to the selected filter when a completion change rem
   expect(screen.getByRole('button', { name: 'Completed (0)' })).toHaveFocus()
 })
 
+test('keeps keyboard focus where the learner moved it while a filtered topic save was pending', async () => {
+  const store = repository()
+  await setCovered(store, 'basic-queries', true, 0)
+  const original = store.setTopicCovered.bind(store)
+  let finish: (() => Promise<void>) | undefined
+  vi.spyOn(store, 'setTopicCovered').mockImplementationOnce((input) => new Promise<CoverageResult>((resolve, reject) => {
+    finish = () => original(input).then(resolve, reject)
+  }))
+  render(<App progressRepository={store} />)
+  await readyButton('Mark Basic queries incomplete')
+  fireEvent.click(screen.getByRole('button', { name: 'Completed (1)' }))
+  const reopen = screen.getByRole('button', { name: 'Mark Basic queries incomplete' })
+  reopen.focus()
+  fireEvent.click(reopen)
+  const home = screen.getByRole('link', { name: 'SQLFlashCards home' })
+  home.focus()
+  await act(async () => { await finish!() })
+  expect(screen.getByRole('heading', { name: 'No completed topics yet' })).toBeVisible()
+  expect(home).toHaveFocus()
+})
+
 test('reading cards never completes a topic; an explicit card-screen choice updates the list', async () => {
   const store = repository()
   const save = vi.spyOn(store, 'setTopicCovered')

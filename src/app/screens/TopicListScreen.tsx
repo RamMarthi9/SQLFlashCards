@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { Catalog } from '../../content/catalog'
 import { cardHref } from '../routes'
 import { TopicCompletion } from '../components/TopicCompletion'
@@ -13,7 +13,7 @@ export function TopicListScreen({ catalog, progress }: { catalog: Catalog; progr
   const topics = catalog.topics.filter((topic) => !ready || filter === 'All' || progress.isCompleted(topic.id) === (filter === 'Completed'))
   const available = catalog.topics.filter((topic) => catalog.cards.some((card) => card.topicId === topic.id)).length
   useEffect(() => { heading.current?.focus() }, [])
-  useEffect(() => {
+  useLayoutEffect(() => {
     const action = completionFocus.current
     if (!action) return
     if (!action.isConnected && document.activeElement === document.body) selectedFilter.current?.focus()
