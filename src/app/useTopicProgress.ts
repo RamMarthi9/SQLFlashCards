@@ -13,7 +13,7 @@ type ProgressState = {
 }
 
 function errorMessage(error: unknown) {
-  return error instanceof Error ? error.message : 'Browser storage is unavailable. Please try again.'
+  return error instanceof Error ? error.message : 'The progress service is unavailable. Please try again.'
 }
 
 export function useTopicProgress(catalog: Catalog | null, repository: ProgressRepository) {
@@ -76,8 +76,8 @@ export function useTopicProgress(catalog: Catalog | null, repository: ProgressRe
       if (progress) records.push(progress)
       update({
         ...current.current, records, savingId: null,
-        issue: result.kind === 'stale' ? { message: 'Your progress changed in another tab. The latest saved status is shown. Retry to apply your change.', change: { topicId, covered } } : null,
-        announcement: result.kind === 'saved' ? `${topic.title} marked ${covered ? 'completed' : 'incomplete'}. Saved in this browser.` : '',
+        issue: result.kind === 'stale' ? { message: 'Your progress changed in another tab or device. The latest saved status is shown. Retry to apply your change.', change: { topicId, covered } } : null,
+        announcement: result.kind === 'saved' ? `${topic.title} marked ${covered ? 'completed' : 'incomplete'}. Saved to your account.` : '',
       })
     } catch (error) {
       if (!mounted.current || request !== generation.current) return
@@ -95,6 +95,7 @@ export function useTopicProgress(catalog: Catalog | null, repository: ProgressRe
     ...state, completed, total, percent: total === 0 ? 0 : Math.round(completed * 100 / total),
     isCompleted: (topicId: string) => state.records.some((record) => record.topicId === topicId && record.covered),
     save,
+    reload,
     retry: () => {
       const change = current.current.issue?.change
       if (change) void save(change.topicId, change.covered)

@@ -2,7 +2,7 @@ import { StrictMode } from 'react'
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { beforeEach, expect, test, vi } from 'vitest'
 import { loadCatalog } from '../content/catalog'
-import App from './App'
+import { LearningApp as App } from './App'
 
 beforeEach(() => { window.history.replaceState(null, '', '/') })
 

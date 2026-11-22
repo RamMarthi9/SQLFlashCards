@@ -30,7 +30,7 @@ export function TopicListScreen({ catalog, progress }: { catalog: Catalog; progr
       <div><p className="eyebrow">YOUR PROGRESS</p><h2 id="progress-title">{ready ? `${progress.completed} of ${progress.total} topics completed` : 'Your saved learning progress'}</h2>
         <p>You choose when a topic is complete. You can mark it incomplete any time.</p></div>
       {ready && <div className="progress-meter"><strong>{progress.percent}% completed</strong><progress aria-label="Completed topics" value={progress.completed} max={progress.total || 1} /></div>}
-      <p className="storage-note">Saved on this device in this browser. Clearing site data removes progress; it does not sync across devices.</p>
+      <p className="storage-note">Saved to your account on this website. Sign in with the same name and PIN to continue on another browser or device.</p>
     </section>
     <div className="topic-filters" role="group" aria-label="Filter topics">{(['All', 'Incomplete', 'Completed'] as const).map((label) => <button key={label}
       ref={filter === label ? selectedFilter : undefined} className="filter-button" aria-pressed={filter === label} disabled={!ready}

@@ -1,8 +1,8 @@
 # SQLFlashCards High Level Design
 
-SQLFlashCards will use one React and TypeScript web application for desktop browsers and Android. It will teach SQL through flashcards, track syllabus coverage, and help learners revise. Learning content will ship with the app; learner progress will be stored locally on the device.
+SQLFlashCards uses a shared React and TypeScript learning interface and a Node.js account service. It teaches SQL through flashcards and tracks each account's syllabus completion in a server database. The Android delivery plan reuses the web interface; an Android package is not yet built.
 
-This design follows the [architecture decisions](architecture.md), [14-topic syllabus](syllabus.md), and [user's visual mockup](app-design-reference.png). The working learning flow includes all 14 topic headings, six starter cards across Basic queries, Filtering, and Joins, answer reveal, inline learning sections, and card navigation. The other 11 topics show Content coming soon. Explicit Completed/Incomplete choices now persist in IndexedDB, with filters and a syllabus progress summary. Review rules, hosting, and the Android package remain planned.
+This design follows the [architecture decisions](architecture.md), [14-topic syllabus](syllabus.md), and [user's visual mockup](app-design-reference.png). The learning flow includes all 14 topic headings, six starter cards across Basic queries, Filtering, and Joins, answer reveal, inline learning sections, and card navigation. The other 11 topics show Content coming soon. The account stage adds simple name-and-four-digit-PIN sign-up/sign-in and server-owned Completed/Incomplete records, retaining the existing filters and summary. Review rules, production hosting, and Android packaging remain planned. See [Account and progress design](account-progress.md) for the account/API boundary and operational requirements.
 
 See the [Low level design](lld.md) for implemented component and storage contracts, proposed review flows, screen interactions, and verification requirements.
 
@@ -12,22 +12,27 @@ The separate [SQL syllabus index](sql-syllabus-index.md) expands the same 14 lea
 
 The learning experience will provide topic selection, questions and answer reveal, Definition, Concept, Examples, and Syntax sections, performance feedback, covered/uncovered topics, revision counts, and proficiency levels. Revision scheduling must support the requested 1, 3, 5, 7, 20, and 30 day rule once its timing semantics are defined.
 
-The first release will display SQL examples without executing queries. It will use local progress without accounts or cloud synchronization. The learning scope is general SQL; examples identify the relevant database when syntax or behaviour is engine-specific. The app does not require a database server.
+The app displays SQL examples without executing learner queries. Each learner signs in with a unique name and four-digit PIN; no email field is required. Progress belongs to the account and is read from the same website's server when signing in from another browser. Clearing browser data removes the session, not the server's progress records. The learning scope remains general SQL; using SQLite for application storage does not make SQLite the teaching dialect.
 
 ## System structure
 
-The diagram shows the target components inside each running client. The two entry points use the same web implementation; they do not imply a shared progress database across devices or browser profiles.
+The diagram distinguishes client presentation from server-owned account data. Browser profiles share an account's progress only when they sign in to the same server/database; production hosting is still a separate delivery step.
 
 ```mermaid
 flowchart TD
     Web[Web browser] --> UI[React screens]
     Android[Android Trusted Web Activity] --> UI
-    UI --> App[Learning coordinator]
+    UI --> Auth[Account session controller]
+    Auth --> App[Learning coordinator]
     App --> Content[Content reader and validation]
     Content --> JSON[Versioned JSON topics and cards]
     App --> Rules[Coverage, revision and proficiency rules]
-    App --> Storage[Storage adapter]
-    Storage <--> DB[(IndexedDB on the device)]
+    App --> HTTP[Account-bound HTTP repository]
+    Auth --> API[Node account and progress API]
+    HTTP --> API
+    API <--> DB[(Persistent SQLite database)]
+    Legacy[(Legacy IndexedDB)] --> Import[Explicit import of own progress]
+    Import --> HTTP
 ```
 
 | Component | Responsibility | Current state |
@@ -36,18 +41,21 @@ flowchart TD
 | Learning coordinator | Load content and progress, validate actions, save results, and refresh the screen. | Content/routes and topic-progress loading, saving, retry, and focus/visibility refresh implemented; review workflows remain planned. |
 | Content reader | Load and validate reviewed topics and cards from versioned JSON. | Bundled JSON with runtime validation, 14 topic records, and six starter cards. |
 | Domain rules | Calculate coverage, revision counts, due dates, and proficiency. | Explicit topic completion and active-syllabus coverage implemented; review counting, scheduling, and scoring remain open. |
-| Storage adapter | Read and write learner records and handle changes to the stored-data format. | Native IndexedDB topic-progress adapter, transaction-completion acknowledgement, version conflict checks, and non-destructive error handling implemented. |
-| IndexedDB | Keep structured learner records in the browser. | Database `sqlflashcards`, version 1, with the `topicProgress` store. Review stores remain future work. |
-| Vercel | Serve the built application and learning content over HTTPS. | Planned; no deployment. |
+| Account controller | Sign up, sign in, sign out, check sessions, and separate displayed account state. | Name/PIN form and session boundary; no PIN or session token in browser storage. |
+| HTTP repository | Read and write progress through the current session, with an expected-account guard. | Account-scoped requests and version-conflict handling replace browser storage as the authoritative path. |
+| Node API | Authenticate sessions, validate requests, enforce account ownership, and commit records. | Same-origin session and progress endpoints, PIN hashing, attempt limits, and server timestamps. |
+| SQLite | Keep accounts, sessions, attempt limits, and account/topic progress on the server. | Persistent file under the configured data directory; deployment must retain and back it up. |
+| Legacy IndexedDB | Preserve prior browser-only progress for optional import. | `sqlflashcards`, version 1, `topicProgress`; never automatically assigned to an account or deleted by import. |
+| Website hosting | Serve the UI and API over HTTPS with durable server storage. | Not deployed. The earlier static-only Vercel plan is insufficient for this account stage. |
 | Android package | Open the hosted web experience through a Trusted Web Activity, built using Bubblewrap. | Planned; no Android package. |
 
-The UI calls the progress coordinator rather than accessing IndexedDB directly. Domain rules and contracts are independent of React, browser storage, and network access; the coordinator supplies the current time explicitly. Future scheduling follows the same boundary so it can be tested predictably.
+The UI calls a progress coordinator and repository interface rather than opening server transactions. The server derives ownership from the authenticated session, validates topic identity and content availability, and supplies authoritative change times. Client account IDs are stale-request guards, never authorization. Future review calculations follow this account boundary.
 
-IndexedDB is scoped to the website's origin and browser profile. Refreshing or reopening the same origin reloads saved progress; a different hostname, scheme, port, or profile uses separate storage. Local records are not a cloud backup, and clearing site data can remove progress. Storage failures are visible to the learner rather than reported as successful saves; cards remain readable while retry is available. See [MDN's IndexedDB overview](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API/Basic_Terminology).
+The browser keeps an HttpOnly session cookie; the server keeps account progress. Sign-out or session expiry clears displayed account state. A failed request is visible and is not replaced with an anonymous browser save. Existing browser-only records can be copied only through an explicit import action, without overwriting account records. Server persistence still needs operational backups; retaining a browser cookie is neither storage durability nor backup.
 
 ## Screens and visual direction
 
-Implemented hash navigation connects the topic list and topic/card learning screen, including direct links and browser Back/Forward. The learning screen follows the supplied mockup's lavender background, large purple concept card, join visuals, and four coloured learning tiles. The due-revision view, revision-count row, and proficiency indicators remain future work and are hidden until their policies and persistence exist.
+The account screen uses the same lavender and purple visual direction, with labelled Name and four-digit PIN fields and separate sign-up/sign-in actions. After authentication, hash navigation connects the topic list and topic/card learning screen, including direct links and browser Back/Forward. The learning screen follows the supplied mockup's large purple concept card, join visuals, and four coloured tiles. The due-revision view, revision-count row, and proficiency indicators remain future work.
 
 Definition uses coral, Concept yellow, Examples mint, and Syntax blue. The tile layout adapts to available width and uses keyboard-accessible disclosure buttons. Each opens one inline section below the grid; selecting it again closes the section, and its Close button returns focus to the tile.
 
@@ -61,9 +69,11 @@ Topic, Flashcard, and Topic progress are implemented. Revision records and deriv
 | --- | --- | --- |
 | Topic | Stable ID, title, syllabus order, and related cards. | Versioned JSON in Git. |
 | Flashcard | Stable ID, topic ID, question, answer, definition, concept, examples, syntax, and optional visual. | Versioned JSON in Git. |
-| Topic progress | Topic ID, covered/uncovered state, completion date if applicable, last-change time, and concurrency version. | IndexedDB `topicProgress`. |
-| Revision record | Unique record ID, topic/card reference, timestamp, and learner feedback. | IndexedDB. |
-| Revision state | Schedule position and next due date calculated from revision history and the agreed rules. | IndexedDB, derived from learner activity. |
+| Account | Stable account ID, unique normalized name, display name, and PIN verifier. | Server database; never the browser's claimed identity. |
+| Session | Hashed opaque session token, account ID, and expiry. | Server database; raw token only in an HttpOnly cookie. |
+| Topic progress | Account ID, topic ID, covered/uncovered state, completion date, last-change time, and concurrency version. | Server database, keyed by account and topic. |
+| Revision record | Unique record ID, account/topic/card reference, timestamp, and learner feedback. | Proposed server-owned history; not implemented. |
+| Revision state | Schedule position and next due date calculated from revision history and agreed rules. | Proposed account-scoped projection; not implemented. |
 
 Revision counts and proficiency should come from learner activity and the agreed rules. Opening a page or refreshing the browser must not itself add a revision. Stable content IDs will keep progress attached to the right learning material when content changes; storage migrations will preserve existing records when the app's data format changes.
 
@@ -73,11 +83,11 @@ Topic completion is a separate learner action. A covered topic may still need re
 
 The implemented flow loads and validates bundled content, opens a topic's first available card, reveals an answer on request, toggles reference sections, and moves between cards. Unknown routes or mismatched topic/card IDs show an unavailable-content view. Card changes, browser history navigation, and reloads reset answer visibility and the open section. These actions create no learner records.
 
-The implemented completion flow loads saved topic records, validates an explicit completion action against active content, and writes it with the version last read. The UI changes to the saved value only after the transaction commits. Another tab's newer change produces a visible conflict and an explicit retry, while focus/visibility refresh picks up saved changes. Loading, reading, and navigating do not write completion records.
+The completion flow loads the signed-in account's topic records, validates an explicit action on the client and server, and writes it with the version last read. The UI changes to the saved value only after the server commits. A newer change from another tab or browser produces a visible conflict and explicit retry. Focus/visibility refresh checks session and saved state; late results from another account must not appear in the current account. Loading, reading, and navigating do not write completion records.
 
 The following review extension remains planned:
 
-1. The app loads the content collection and reads local learner records.
+1. The app loads the content collection and reads the authenticated account's learner records.
 2. The learner selects a topic and reads a question or learning section.
 3. The learner reveals the answer and submits performance feedback.
 4. The coordinator passes that action, previous records, and the current time to the domain rules.
@@ -92,14 +102,14 @@ The precise action that qualifies as a completed revision must be settled before
 ```mermaid
 flowchart LR
     Source[Code and content in GitHub] --> Checks[TypeScript, ESLint and Vitest checks]
-    Checks --> Build[Vite production build]
+    Checks --> Build[Vite client and TypeScript server build]
     Build --> Release[Release step - planned]
-    Release --> Host[Vercel static hosting - planned]
+    Release --> Host[HTTPS Node host with persistent storage - planned]
     Host --> Browser[Web browser]
     Host --> Android[Android TWA - planned]
 ```
 
-Node.js and npm run the development tools. Vite serves the app locally during development and produces the release files. GitHub Actions is configured to install locked dependencies and run checks on pull requests and pushes to main; it does not currently deploy the app.
+Node.js runs both the application server and development tools. The development command starts the API and Vite; production builds contain client assets and a compiled server. GitHub Actions installs locked dependencies and runs checks on pull requests and pushes to main; it does not deploy the app. A static host alone cannot execute the account API or retain its database. Production requires HTTPS, a persistent data volume, a private PIN pepper, and a backup/restore process.
 
 For Android, Bubblewrap will create the package that opens the hosted app through a Trusted Web Activity. Website ownership must be verified using Digital Asset Links. This is a wrapper around the web experience, so the learning UI and rules remain in the shared web code. See the [Chrome Trusted Web Activity guide](https://developer.chrome.com/docs/android/trusted-web-activity/quick-start).
 
@@ -107,13 +117,13 @@ For Android, Bubblewrap will create the package that opens the hosted app throug
 
 The proposed first reminder capability is an in-app due list calculated from saved revision dates when the app opens. Notification delivery is a separate component to design after deciding whether reminders must work while the app is closed and how precise their timing must be.
 
-Browsers control service-worker execution and background scheduling. Consequently, this client-only design does not promise exact closed-app alarms; that is a design constraint inferred from [MDN's background-operation guidance](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/Offline_and_background_operation).
+Browsers control service-worker execution and background scheduling. Adding the account API does not implement a reminder scheduler or promise exact closed-app alarms; see [MDN's background-operation guidance](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/Offline_and_background_operation).
 
-Offline launching requires a separate asset-caching design; local progress storage alone does not provide it. Accounts, cloud backup, and synchronization across devices are later capabilities and would require additional services and data-conflict rules.
+Offline launching requires a separate asset-caching and write-queue design. Account progress is shared through the running server; requests require a connection. Automated backups, account recovery, and stronger authentication are separate capabilities. A four-digit PIN has only 10,000 possible values: hashing and attempt limits reduce exposure but do not make it a strong credential. No email-based recovery is available in this two-field design.
 
 ## Validation and remaining decisions
 
-The existing `npm.cmd run check` command runs type checking, linting, tests, and the production build. Content, learning interaction, progress coordination, and storage contract tests belong to the current stage; actual executed results belong in [Project status](status.md). Real-browser checks must verify saved progress after refresh/reopen, storage failures and upgrades, narrow and desktop layouts, keyboard access, and the supplied visual direction. Simulated IndexedDB tests do not replace browser verification. Later review checks must cover duplicate submissions, revision dates, and scoring. Android delivery will need device testing and domain-verification checks.
+The `npm.cmd run check` command checks client/server types, linting, tests, and production builds. The account stage adds HTTP/database tests for ownership, session lifecycle, guessing limits, validation, concurrent writes, and persistence across server restart. Actual results belong in [Project status](status.md). Real-browser checks must verify separate accounts, sign-in from another profile, refresh/reopen, import, request failures, session expiry, responsive layouts, keyboard access, and the supplied visual direction. Simulated UI/IndexedDB tests do not replace those checks. Later reviews need duplicate-submission, date, and scoring tests; Android delivery needs device and domain-verification checks.
 
 Before implementing the corresponding features, settle these decisions:
 

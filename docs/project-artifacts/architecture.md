@@ -4,7 +4,7 @@ SQLFlashCards uses a staged implementation. This document records the agreed arc
 
 ## Current implementation scope
 
-The Stage 1 foundation provides React, strict TypeScript, Vite, ESLint, Vitest, a dependency lockfile, and CI checks. The learning flow loads validated versioned JSON with all 14 syllabus topics and six starter cards across Basic queries, Filtering, and Joins. Learners can choose a topic, reveal answers, toggle four learning sections, and navigate between cards. Empty topics display Content coming soon. Explicit Completed/Incomplete choices, list filters, and a completion summary now use local IndexedDB storage. Review history, reminders, and proficiency remain future stages.
+The Stage 1 foundation provides React, strict TypeScript, Vite, ESLint, Vitest, a dependency lockfile, and CI checks. The learning flow loads validated versioned JSON with all 14 syllabus topics and six starter cards across Basic queries, Filtering, and Joins. Learners can choose a topic, reveal answers, toggle four learning sections, and navigate between cards. Empty topics display Content coming soon. The account stage adds name-and-four-digit-PIN sign-up/sign-in and stores explicit Completed/Incomplete choices separately for each account on the server. The list filters and completion summary retain their existing semantics. Review history, reminders, and proficiency remain future stages.
 
 The application is developed and checked locally. Hosting setup, service purchases, Android packaging, and public releases are outside this stage.
 
@@ -16,10 +16,11 @@ The application is developed and checked locally. Hosting setup, service purchas
 | Development and build | Vite | Configured |
 | Source of truth | GitHub for code, content, tests, and documentation | Repository and PR workflow |
 | Learning content | General SQL topics in versioned JSON in Git; label database-specific syntax and behaviour in relevant examples | Runtime-validated catalogue with six starter cards and curriculum mappings |
-| Learner progress | IndexedDB in the browser, behind a repository interface | Explicit topic completion implemented; review history remains planned |
-| Web hosting | Vercel | Planned; no deployment |
+| Learner progress | Account-scoped SQLite records on a Node.js server, reached through a repository interface | Explicit topic completion; legacy IndexedDB is an optional import source only |
+| Identity | Unique name plus four-digit PIN; server sessions in HttpOnly cookies | Sign-up/sign-in/sign-out and account ownership checks; no email or PIN recovery flow |
+| Web hosting | HTTPS Node host with persistent storage | Not deployed; supersedes the static-only Vercel plan |
 | Android distribution | Trusted Web Activity through Bubblewrap | Planned; no Android package |
-| Accounts and synchronization | A later cloud phase | Deferred |
+| Cross-browser progress | Sign in to the same account on the same running server | Server-owned records; no offline write queue or real-time push |
 | SQL execution | Display examples; do not execute user-supplied SQL in the MVP | Examples and result tables displayed; no execution environment |
 
 ## Visual design reference
@@ -39,7 +40,7 @@ Left Join is implemented as a starter card, while the count of 3 and the highlig
 
 ## Module boundaries
 
-`src/main.tsx` mounts React. `src/app/` contains the screen host, hash-route handling, topic and learning screens, content rendering, styling, and interaction tests. `src/content/` owns the JSON catalogue, content types, loader, runtime validation, and content tests. `src/app/useTopicProgress.ts` coordinates saved state and completion actions for the screens; `src/domain/progress.ts` defines the progress and repository contracts, and `src/storage/indexedDbProgress.ts` implements IndexedDB access. Shared styling lives in `src/styles.css`; test setup lives in `src/test/`. Keep configuration at the repository root and project design, status, reference, and educational artifacts in `docs/project-artifacts/`.
+`src/main.tsx` mounts React. `src/app/` contains account/session handling, the screen host, routes, topic and learning screens, content rendering, styling, and interaction tests. `src/content/` owns the JSON catalogue and its validation. `src/app/useTopicProgress.ts` coordinates completion; `src/domain/progress.ts` defines its contracts. `src/storage/httpProgress.ts` is the authoritative account repository; `src/storage/indexedDbProgress.ts` reads the previous browser-only store for explicit import. `server/` owns authentication, request validation, database transactions, and serving the built application. Shared styling lives in `src/styles.css`; test setup lives in `src/test/`. Keep design and status artifacts in `docs/project-artifacts/`.
 
 The current progress feature and later stages use these boundaries:
 
@@ -47,17 +48,20 @@ The current progress feature and later stages use these boundaries:
 | --- | --- | --- |
 | UI: `src/app/` | Render learning state and handle user actions | Delegate scheduling and scoring to the domain layer. |
 | Domain: `src/domain/` | Progress and repository contracts; later pure revision scheduling, counts, and expertise | No React, browser storage, network calls, or implicit system clock. Pass dates and other inputs explicitly. |
-| Storage: `src/storage/` | IndexedDB access, persistence, and schema upgrades | Implement interfaces consumed by the progress coordinator; keep database details out of components and domain rules. |
+| Client repository: `src/storage/` | Account-bound HTTP progress requests and legacy IndexedDB import access | Never authorize an account from a client-supplied ID; never silently fall back to browser saves. |
+| Server: `server/` | Sessions, PIN verification, attempt limits, account authorization, and SQLite transactions | Derive ownership from the session; validate every write; keep raw PINs, cookie tokens, and secrets out of logs and Git. |
 | Content: `src/content/` | Versioned JSON questions, answers, explanations, tables, SQL examples, and syllabus IDs | Validate before rendering; reject invalid catalogues rather than silently dropping cards. Keep content separate from future learner records and identify database-specific examples. |
 
-The native IndexedDB adapter creates database `sqlflashcards` at schema version 1 with only the `topicProgress` store. Review-event, schedule, and policy stores are deferred until those features need them. Save acknowledgement follows transaction completion. A version comparison in the same readwrite transaction rejects stale changes from another tab; focus/visibility refresh keeps the displayed state current but is not the concurrency safeguard. Blocked upgrades, unavailable storage, failed writes, and invalid saved records produce actionable errors without automatic database deletion. Old connections close on `versionchange`.
+The server stores topic progress by `(account_id, topic_id)` and checks the expected version inside the write transaction. It uses the authenticated session's account ID and rejects a mismatched expected-account header, preventing an old tab or late request from writing into a newly signed-in account. Save acknowledgement follows commit. Focus/visibility refresh keeps displayed state current but does not replace authorization or concurrency checks. Review tables are deferred until needed. See [Account and progress design](account-progress.md) for API, storage, security, and operating details.
 
-Hash routes validate both card and topic identity; direct links, refresh, and browser history load the requested content without retaining transient answers or open sections. Explicit topic completion is independent of that transient state. All active topics count in the summary; missing records mean incomplete, retired records remain stored but excluded, and topics without cards cannot be newly completed. Storage belongs to the same origin and browser profile; it is not backup, cross-device synchronization, or an offline-launch mechanism.
+The prior IndexedDB database `sqlflashcards`, version 1, remains available only for explicit import. Import copies the learner's selected browser history without overwriting records already in the account and preserves the source data. It never assigns a shared browser's records to whoever signs in automatically.
+
+Hash routes validate both card and topic identity; direct links, refresh, and browser history load the requested content without retaining transient answers or open sections. Explicit topic completion is independent of that state. All active topics count; missing records mean incomplete, retired records remain stored but excluded, and topics without cards cannot be newly completed. Clearing browser data signs the learner out but does not erase server records. The server must be available for account progress; this is not an offline-launch mechanism.
 
 ## Learning requirements for later stages
 
 - Performance feedback and durable review history extending the implemented answer-reveal flow.
-- Durable revision history extending the implemented local topic-completion store.
+- Durable account-scoped revision history extending the implemented topic-completion store.
 - A visible count of how many times each topic has been revised.
 - An expertise level for each topic derived from performance, with an explanation the learner can understand.
 - Revision reminders following the requested 1, 3, 5, 7, 20, and 30 day rule.
@@ -68,10 +72,10 @@ Closed-app alarms, notification permissions, and delivery guarantees also need a
 
 ## Quality and delivery
 
-Keep TypeScript strict for both application code and tooling. Use automated linting, content validation tests, interaction tests, and a production build. Keep future business rules testable independently of the UI and IndexedDB. Actual check outcomes are recorded in [Project status](status.md), and repeatable browser test steps are in the [repository README](../../readme.md#manual-verification).
+Keep TypeScript strict for application, server, and tooling code. Use linting, content tests, interaction tests, real HTTP/database integration tests, and client/server production builds. Test account isolation, restart durability, leading-zero PINs, session expiry/revocation, origin checks, throttling, and version conflicts. Keep future business rules independent of UI and persistence. Actual outcomes belong in [Project status](status.md); browser steps are in the [repository README](../../readme.md#manual-verification).
 
 Use `npm ci` for reproducible installs from the committed lockfile. Run `npm run check` locally and inspect the GitHub Actions result on the PR. Record failures or unavailable checks honestly; do not replace a failed test with a weaker one or disable checks to obtain a pass.
 
 Use small branches and reviewable PRs. Each stage report must include changed files, check evidence, manual verification instructions, outstanding issues, and a branch/commit or PR link. Update documentation when behavior changes.
 
-Keep secrets, signing keys, and learner records out of Git. No cloud credentials are required for the current learning flow. Provisioning Vercel, configuring Bubblewrap, setting up cloud accounts, or publishing a release requires a separately requested stage.
+Keep secrets, signing keys, account databases, and learner records out of Git. Local development creates its database and private PIN pepper in ignored `user-data/`; production requires an explicit secret and durable data directory. A four-digit PIN is a deliberately limited credential, protected by slow hashing, a server-side pepper, and attempt limits; it is not suitable for sensitive records. Production hosting, backup/restore operations, stronger authentication/recovery, and Android packaging remain separate delivery work.
