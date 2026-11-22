@@ -12,7 +12,7 @@ This folder is the canonical home for the project's design documents, learning s
 | [SQL syllabus index](sql-syllabus-index.md) | Numbered subtopics, prerequisites, outcomes, keyword lookup, and primary source references for the 14 modules. | Detailed learning scope or supporting references change. |
 | [App mockup](app-design-reference.png) | The user's visual reference for Android and web. | The user supplies or approves a revised visual reference. |
 
-The HLD and LLD distinguish the working flashcard flow from planned progress and delivery features. Start with [Project status](status.md) to see what is implemented and verified. Local run commands and test instructions remain in the [repository README](../../readme.md).
+The HLD and LLD distinguish the working flashcard flow and saved topic completion from planned review, proficiency, and delivery features. Start with [Project status](status.md) to see what is implemented and verified. Local run commands and test instructions remain in the [repository README](../../readme.md).
 
 ## Maintenance workflow
 

@@ -2,7 +2,7 @@
 
 SQLFlashCards is a SQL learning app being built around short flashcards, syllabus coverage, and spaced revision.
 
-**First working flashcard flow.** Choose a topic, read a question, reveal its answer, explore Definition, Concept, Examples, and Syntax, and move between cards. Six starter cards cover SELECT, DISTINCT, WHERE, NULL, INNER JOIN, and LEFT JOIN. All 14 syllabus topics are listed; the other 11 show Content coming soon. Saved progress, reminders, revision counts, and proficiency scoring are future work.
+**First working flashcard flow.** Choose a topic, read a question, reveal its answer, explore Definition, Concept, Examples, and Syntax, and move between cards. Six starter cards cover SELECT, DISTINCT, WHERE, NULL, INNER JOIN, and LEFT JOIN. All 14 syllabus topics are listed; the other 11 show Content coming soon. You can mark available topics completed or incomplete, filter the topic list, and keep your progress after refreshing or reopening the same browser. Reminders, revision counts, and proficiency scoring are future work.
 
 ## Run locally
 
@@ -15,7 +15,7 @@ npm run dev
 
 Open the local URL printed by Vite. In Windows PowerShell, use `npm.cmd` instead of `npm` if script execution policy blocks `npm.ps1`.
 
-`npm ci` installs the versions in `package-lock.json`. Commit changes to both `package.json` and the lockfile when updating dependencies. No environment variables, database, account, or credentials are needed for the current learning flow.
+`npm ci` installs the versions in `package-lock.json`. Commit changes to both `package.json` and the lockfile when updating dependencies. No environment variables, database server, account, or credentials are needed. The browser creates the local IndexedDB progress store when the app opens.
 
 TypeScript 6 and Vitest 4 are pinned to compatible versions of the lint tooling and Testing Library matchers. Upgrade these packages together only after the full checks pass; library declarations are checked too.
 
@@ -33,9 +33,9 @@ TypeScript 6 and Vitest 4 are pinned to compatible versions of the lint tooling 
 
 The GitHub Actions workflow installs dependencies with `npm ci` and runs the same checks. A workflow definition alone is not evidence of a passing run; inspect the PR checks for the outcome. Local test evidence and any checks that could not run belong in the stage's PR description.
 
-### Known dependency issue
+### Dependency audit
 
-As of November 18, 2026, the dependency audit reports a high-severity denial-of-service advisory in the development-only `picomatch` dependency, propagated through the build, lint, and test tools. The [upstream advisory](https://github.com/advisories/GHSA-fc5q-39xc-vjpf) lists no patched version. Review dependency updates when a fix becomes available. Keep development servers local and do not feed untrusted glob patterns to tooling. This finding remains open; it is not suppressed or reported as a passing full audit.
+The November 18, 2026 audit reported a development-only `picomatch` denial-of-service advisory. On November 22, 2026, the npm install audit reported **0 vulnerabilities across 252 packages** after adding the development-only `fake-indexeddb` test dependency. This records the current audit result, not a guarantee against future advisories; keep the dependency lockfile and audit evidence current.
 
 ## Manual verification
 
@@ -46,16 +46,23 @@ As of November 18, 2026, the dependency audit reports a high-severity denial-of-
 5. Open Joins and the Left Join card. Check its diagram, then compare the input and result tables in Examples. Open a section with the keyboard, activate its Close button, and confirm focus returns to that section's tile.
 6. Reload a card URL such as `#/topics/joins/cards/joins-left-basic`. It should reopen that card with the answer hidden. Try `#/topics/joins/cards/missing` and confirm a clear unavailable-content view offers a return to Topics.
 7. Check at 320, 390, 768, and 1280 px widths and with enlarged text. Text and controls should remain readable; SQL and table panels may scroll horizontally without causing whole-page overflow. Navigate with Tab and Enter/Space and inspect the browser console for errors.
-8. Stop the dev server and run `npm.cmd run preview` after the successful build. Repeat the topic, card, deep-link, and browser-console checks using the preview URL.
+8. On Topics, mark Basic queries completed. Wait for the saved result, then confirm its completed status and the completed/total summary. Switch between All, Completed, and Incomplete; the same topic should move between the matching views without losing access to its cards. Topics without cards cannot be newly marked completed.
+9. Refresh the page, then close and reopen the browser using the **same URL and browser profile**. Basic queries should remain completed. Open one of its cards, mark the topic incomplete, and refresh again; it should remain incomplete. Revealing answers and navigating cards should never change completion by themselves.
+10. Open the same app URL in two tabs. Change a topic in one, then return to the other; its saved state should refresh when it regains focus. A stale save must show the newer state and offer an explicit retry rather than silently overwrite it. If storage is unavailable, check that the app explains the failure, offers retry, and still lets you read cards without claiming a save succeeded.
+11. Stop the dev server and run `npm.cmd run preview` after the successful build. Repeat the topic, card, deep-link, progress, and browser-console checks using the preview URL. A different port is a different origin and starts with separate browser storage.
 
-These are repeatable test instructions; actual completed checks are recorded in [Project status](docs/project-artifacts/status.md). Answers and open sections reset on navigation or refresh. This version does not save learning progress, execute SQL, count revisions, assign proficiency, or schedule reminders.
+These are repeatable test instructions; actual completed checks are recorded in [Project status](docs/project-artifacts/status.md). Answers and open sections reset on navigation or refresh; explicit topic completion is saved separately. Completion records what you chose to mark done, not an assessment of mastery or a claim that the whole topic has authored cards. This version does not execute SQL, count revisions, assign proficiency, or schedule reminders.
+
+Progress belongs to this website's origin and browser profile. It is not synchronized or backed up to an account. Clearing site data removes it, and private browsing or browser storage policies can limit how long it is kept. Local storage does not provide offline launching; the local server still needs to be running to open the app.
 
 ## Repository layout
 
 ```text
 src/
   main.tsx              React entry point
-  app/                  Hash routes, topic/learning screens, components, styles, and tests
+  app/                  Screens, routes, useTopicProgress coordinator, components, styles, tests
+  domain/               Topic progress records and repository contracts
+  storage/              Native IndexedDB progress adapter and contract tests
   content/              Versioned JSON starter cards, content types, validation, and tests
   styles.css            Shared page styles
   test/setup.ts         Test environment setup
@@ -73,17 +80,17 @@ AGENTS.md               Artifact maintenance guidance for project work
 package-lock.json       Reproducible dependency installation
 ```
 
-The strict TypeScript, ESLint, Vite, and Vitest configuration files live at the repository root. Business logic and storage adapters will be added as separate modules when their stages are requested.
+The strict TypeScript, ESLint, Vite, and Vitest configuration files live at the repository root. IndexedDB access stays behind a repository interface; components do not open database transactions directly.
 
 ## Agreed direction
 
 - React and strict TypeScript provide the interface; Vite handles local development and builds.
 - GitHub is the source of truth for code, versioned JSON flashcards, tests, and documentation.
-- IndexedDB will store learner progress. Cloud accounts and synchronization are a later phase.
+- IndexedDB stores explicit topic completion locally. Cloud accounts and synchronization are a later phase.
 - Teach SQL concepts broadly, with no single database engine as the default teaching dialect. Label database-specific syntax where needed. The MVP will display SQL examples without executing user-supplied SQL.
 - Vercel will host the web application in a later deployment stage. Android distribution will use a Trusted Web Activity through Bubblewrap in a later stage.
 
-Topic selection, answer reveal, inline learning sections, and card navigation are implemented. Later stages will add performance feedback, explicit covered/uncovered topics, revision counts, and proficiency based on performance. Revision reminders must support the requested **1, 3, 5, 7, 20, and 30 day** rule; its scheduling semantics and the proficiency formula still need to be specified before implementation.
+Topic selection, answer reveal, inline learning sections, card navigation, and saved completed/incomplete topics are implemented. Later stages will add performance feedback, revision counts, and proficiency based on performance. Revision reminders must support the requested **1, 3, 5, 7, 20, and 30 day** rule; its scheduling semantics and the proficiency formula still need to be specified before implementation.
 
 All design, status, syllabus, and visual reference artifacts live in [Project artifacts](docs/project-artifacts/README.md). See [Project status](docs/project-artifacts/status.md) for progress, the [High level design](docs/project-artifacts/hld.md) for system components and delivery, the [Low level design](docs/project-artifacts/lld.md) for component contracts and interactions, [Architecture](docs/project-artifacts/architecture.md) for technical decisions, and [Planned syllabus](docs/project-artifacts/syllabus.md) for the learning scope.
 

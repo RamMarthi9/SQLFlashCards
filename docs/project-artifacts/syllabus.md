@@ -1,18 +1,20 @@
 # Planned SQL syllabus
 
-This is the educational scope for SQLFlashCards content. The app lists all 14 topics and now loads six starter cards across Basic queries, Filtering, and Joins; the other 11 topics show Content coming soon. Learner completion is not yet recorded. SQLFlashCards teaches general SQL concepts, with database-specific syntax and behaviour labelled in relevant examples. Feature availability and exact syntax can vary between databases.
+This is the educational scope for SQLFlashCards content. The app lists all 14 topics and now loads six starter cards across Basic queries, Filtering, and Joins; the other 11 topics show Content coming soon. Learners can explicitly mark topics with available cards completed or incomplete and save that choice in their browser. SQLFlashCards teaches general SQL concepts, with database-specific syntax and behaviour labelled in relevant examples. Feature availability and exact syntax can vary between databases.
 
 Use the separate [SQL syllabus index](sql-syllabus-index.md) for numbered subtopics, prerequisites, learning outcomes, keyword lookup, and researched source links. This document retains the concise 14-topic checklist and coverage model.
 
 ## Coverage model
 
-A topic will be **covered** when the learner explicitly marks it complete and **uncovered** otherwise. A learner can return a topic to uncovered. Completion is separate from understanding: a covered topic can still contain cards that need revision.
+A topic is **covered** when the learner explicitly marks it completed and **uncovered** otherwise; the interface calls these states **Completed** and **Incomplete**. A learner can return a topic to incomplete. Completion is separate from understanding: a completed topic can still contain cards that need revision.
 
-New learners start with every topic uncovered. Existing notes or source material do not count as learner completion. The future progress calculation is:
+New learners start with every topic incomplete. Existing notes or source material do not count as learner completion. The implemented progress calculation is:
 
 ```text
 Progress (%) = covered topics / total topics * 100
 ```
+
+The denominator includes all active syllabus topics, currently 14. Missing saved records mean incomplete; an empty catalogue produces 0%. Topics without cards cannot be newly completed. If cards are later removed from a completed topic, its saved completion remains and it can still be marked incomplete. Retired topics keep their stored records but do not count in the active syllabus percentage. Opening, revealing, or navigating cards never changes completion.
 
 The checklist below describes the learning plan, not measured user progress. The [implemented starter-card inventory](sql-syllabus-index.md#implemented-starter-cards) separately records which content exists in the app; six starter cards do not complete those three modules' full scope.
 
@@ -37,7 +39,7 @@ No topics are marked covered in this initial plan.
 - [ ] **13. Relational design and transactions:** keys, relationships, normalization basics, ACID, `COMMIT`, and `ROLLBACK`.
 - [ ] **14. Performance and interview practice:** indexes, query plans, duplicate detection, highest-salary questions, and query debugging.
 
-**Initial learning plan: 0 of 14 topics covered (0%).** This checklist can be edited as documentation; interactive completion belongs in a later app stage.
+**Initial learning plan: 0 of 14 topics covered (0%).** This is a documentation checklist, not a copy of anyone's saved progress. Interactive completion is kept locally in the app and does not edit this document.
 
 ## Example card
 
