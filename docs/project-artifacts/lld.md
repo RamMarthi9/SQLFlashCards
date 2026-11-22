@@ -1,23 +1,24 @@
 # SQLFlashCards Low Level Design
 
-This design translates the [HLD](hld.md) and [visual mockup](app-design-reference.png) into React components, content contracts, local completion storage, and future review flows. The first two delivery steps are implemented: validated bundled content, a 14-topic list, six starter cards, hash navigation, question/reveal, four inline learning sections, and explicit saved topic completion. Feedback, review history, revision counts, scheduling, and proficiency contracts below remain proposed until their respective stages.
+This design translates the [HLD](hld.md) and [visual mockup](app-design-reference.png) into React components, content contracts, account-owned completion, and future review flows. The working flow includes validated content, a 14-topic list, six starter cards, hash navigation, question/reveal, four inline sections, and explicit saved topic completion. The account extension uses simple name-and-four-digit-PIN authentication and server persistence. Feedback, review history, revision counts, scheduling, and proficiency contracts remain proposed. The [Account and progress design](account-progress.md) is the detailed account/API reference.
 
-The application remains a single React and TypeScript web application with versioned JSON learning content, IndexedDB topic progress, planned Vercel hosting, and a planned Android Trusted Web Activity package. Content teaches general SQL and identifies database-specific syntax or behaviour in relevant examples. SQL examples are displayed, not executed. Accounts, a backend API, cloud synchronization, offline launch, and background notifications are outside this design's first implementation stages.
+The application consists of a React/TypeScript client, versioned JSON learning content, and a Node.js account/progress API backed by persistent SQLite. IndexedDB is retained only as an explicit import source for earlier browser progress. Production hosting and an Android Trusted Web Activity package remain planned. Content teaches general SQL; backend SQLite is an implementation choice, not the teaching dialect. SQL examples are displayed, not executed. Offline launch, queued offline changes, and background notifications remain outside this stage.
 
 ## Design choices and unresolved policies
 
-The content hierarchy, tile interaction, hash navigation, topic completion, and its persistence coordinator are implemented. Feedback and review activity records remain proposed:
+The content hierarchy, tile interaction, hash navigation, explicit topic completion, and account persistence are implemented in this stage. Feedback and review activity records remain proposed; actual verification belongs in status:
 
 | Area | Choice and delivery status |
 | --- | --- |
 | Content hierarchy | A topic is one of the 14 syllabus groups. A flashcard tests one question/concept within a topic. `joins` contains card `joins-left-basic`, displayed as Left Join. |
 | Tile interaction | Definition, Concept, Examples, and Syntax buttons toggle one inline section panel below the tile grid. |
 | Navigation | Hash routes with validated topic/card IDs and browser Back/Forward support. No router package is currently installed. |
-| Screen state | Transient React study state and a progress coordinator are implemented. Loading and committed progress are shared across the topic and learning screens. No global state library is needed. |
+| Screen state | An account/session boundary owns the learning instance. Progress is shared across topic/card screens for that account and discarded from the visible session on sign-out or identity change. |
 | Topic completion | Explicit Completed/Incomplete actions, All/Completed/Incomplete filters, and an active-topic progress summary. Reading cards never automatically completes a topic. |
 | Feedback | After revealing an answer, the learner chooses Need practice, With help, or Confident. These are self-reports, not automatic SQL grading. |
 | Activity records | Persist individual completed card-review events with stable IDs. The displayed card's counter is derived from those events under the eventual revision-counting policy. |
-| Storage | Native IndexedDB behind a repository interface stores topic progress now. Durable pending review submissions remain a later-stage design. |
+| Storage | The HTTP repository reaches authenticated server records. Legacy IndexedDB is available for explicit import only. Durable pending review submissions remain a later-stage design. |
+| Sign-up | Name and four-digit PIN only. Name is unique after normalization; PIN is a string to preserve leading zeroes. No email or automatic account-recovery flow. |
 
 These choices make the design concrete without settling the HLD's open learning policies. In particular, a sum of card reviews is not automatically a completed whole-topic revision. The product decisions near the end of this document must be resolved before enabling their dependent features.
 
@@ -30,30 +31,35 @@ These choices make the design concrete without settling the HLD's open learning 
 | `#/revisions` | Due revisions | Planned: once scheduling is enabled, list active cards with saved due dates at or before the supplied current time. Currently treated as unavailable. |
 | Unknown route or ID | Missing content view | Explain that the item is unavailable and provide a return to Topics. Never substitute an unrelated card silently. |
 
-An empty URL opens Topics. Validate that a card belongs to the route's topic. Route changes, browser Back/Forward, and reload reset answer visibility and the open section. No learner records are created. In the later review stage, route changes also reset unsubmitted feedback while staged submissions remain recoverable.
+An unauthenticated visitor sees the account screen; an empty learning URL opens Topics after sign-in. Validate that a card belongs to the route's topic. Route changes, browser Back/Forward, and reload reset answer visibility and the open section without writing progress. In the later review stage, route changes also reset unsubmitted feedback while staged submissions remain recoverable. A late request from a previous account must never populate the current account's screen.
 
 The tree and component contracts below describe the target decomposition, not a requirement for one file per box. The current `LearningScreen` directly owns the hero, prompt, disclosure controls, and card navigation; `LearningContent` renders section blocks and diagrams. Completion controls and saved-state feedback are implemented; feedback, revisions, and proficiency components remain future work.
 
 ```text
 App
-  AppHeader
-  RouteView
-    TopicListScreen
-      CoverageSummary
-      TopicFilters
-      TopicList
-    LearningScreen
-      TopicHero
-      StudyPrompt
-      LearningTiles
-      LearningSectionPanel
-      TopicCompletion
-      ReviewFeedback
-      RevisionSummary
-      ProficiencyIndicator
-      CardNavigation
-    DueRevisionsScreen
-  StatusMessage
+  AccountApp
+    AccountForm or session-loading/error state
+    AccountWorkspace (keyed by account ID)
+      LearningApp
+        AppHeader with account controls
+        LegacyImport
+        RouteView
+          TopicListScreen
+            CoverageSummary
+            TopicFilters
+            TopicList
+          LearningScreen
+            TopicHero
+            StudyPrompt
+            LearningTiles
+            LearningSectionPanel
+            TopicCompletion
+            ReviewFeedback (future)
+            RevisionSummary (future)
+            ProficiencyIndicator (future)
+            CardNavigation
+          DueRevisionsScreen (future)
+        StatusMessage
 ```
 
 | Component | Inputs | User action or responsibility |
@@ -88,7 +94,7 @@ Proposed CSS behaviour:
 
 ## Module layout
 
-The current flow uses `src/app/App.tsx`, `src/app/routes.ts`, `src/app/screens/TopicListScreen.tsx`, `src/app/screens/LearningScreen.tsx`, and `src/app/components/LearningContent.tsx`. `src/content/catalog.ts` owns the content types and validation/loading API for `catalog.json`. `src/domain/progress.ts` defines the progress and repository contracts; `src/storage/indexedDbProgress.ts` implements the native IndexedDB repository. `src/app/useTopicProgress.ts` coordinates loading, saving, retries, active-topic coverage, and focus/visibility refresh. `src/app/components/TopicCompletion.tsx` provides the completion control and shared progress notices. Tests live beside the corresponding modules.
+The client flow uses `src/app/App.tsx`, account/session components, routes, topic and learning screens, and `LearningContent.tsx`. `src/content/catalog.ts` owns content validation; `src/domain/progress.ts` defines progress/repository contracts. `src/storage/httpProgress.ts` binds requests to the active account, while `indexedDbProgress.ts` retains the legacy import source. `useTopicProgress.ts` coordinates loading, saving, retry, coverage, and focus/visibility refresh. `TopicCompletion.tsx` provides controls and notices. `server/` owns authentication, authorization, persistent records, API handling, and static asset delivery; tests live beside their corresponding modules.
 
 The following remains a target layout for later review capabilities; proposed file names do not imply that those features already exist:
 
@@ -118,9 +124,8 @@ src/
     validateCatalog.ts
     diagrams/                     # Bundled SVG assets with known paths
   storage/
-    indexedDbProgressRepository.ts
-    migrations.ts
-    storageErrors.ts
+    httpProgress.ts               # Account progress HTTP adapter
+    indexedDbProgress.ts          # Legacy import source only
   styles.css                      # Shared typography and design tokens
   test/                           # Existing setup plus shared test fixtures
 ```
@@ -261,27 +266,21 @@ An administrative policy activation uses a monotonically increasing revision in 
 
 Revision counts, proficiency, and due dates are derived values; components never increment them locally. Review features that require an unresolved policy stay disabled at the feature level. The earlier content/reveal stage can ship without displaying technical configuration messages or invented progress values.
 
-## IndexedDB schema and ownership
+## Server storage and legacy import
 
-Implemented database name: `sqlflashcards`; database schema version: `1`. Version 1 creates only `topicProgress`, keyed by `topicId`. Database schema version, content version, and future learning-policy version are separate values. The other stores below are proposed for the review stage and will require a later numbered schema migration; they are not created pre-emptively.
+Account progress is authoritative in the server's SQLite database. Accounts have stable IDs and unique normalized names; session rows hold hashed opaque tokens and expiry. Topic progress is keyed by both account and topic. Request ownership comes from the session, not a request body or header. Attempt counters are persistent so a process restart does not reset sign-in limits. The [account design](account-progress.md#data-ownership) describes these records and lifecycle rules.
 
-| Object store | Key and indexes | Purpose |
-| --- | --- | --- |
-| `topicProgress` (implemented) | Key `topicId` | Authoritative explicit topic coverage and optimistic-concurrency version. |
-| `reviewEvents` | Key `commandId`; index `cardId`; unique compound index `[cardId, sequence]`; index `topicId` | Immutable review activity, including the feedback and policy/content version used. |
-| `cardState` | Key `cardId`; index `schedule.dueAt` | Rebuildable count, proficiency, due-date state, and concurrency version. Unscheduled states have no due-date index entry. |
-| `pendingReviews` | Key `commandId`; indexes `cardId` and `occurredAt` | Frozen submission payload staged before recording its completed activity. |
-| `metadata` | Key `key`; `activeRuleSet` record contains version and activation revision | Authoritative active policy, preventing older tabs from reverting new projections. |
+The earlier IndexedDB database `sqlflashcards`, version 1, contains `topicProgress` keyed only by topic ID. It is a legacy import source, not an account database. Import is explicit, preserves that source, and skips account records that already exist; a version-0 write prevents overwriting a concurrent account change. Import must not silently claim another person's progress on a shared browser.
 
-IndexedDB records are local to the site's origin and browser storage context. There is no implied synchronization across devices or profiles. Hosting-origin changes need a migration/export plan; clearing site data can remove records. See [MDN's IndexedDB overview](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API/Basic_Terminology).
+Future review records must also be keyed or authorized by account. The conceptual `reviewEvents`, `cardState`, `pendingReviews`, and policy `metadata` described below are proposed server-side records, not stores that already exist. Their final SQL schema and HTTP endpoints require a later design/implementation step. Database schema version, content version, and learning-policy version remain separate values.
 
 Projection records can be rebuilt from immutable events with a selected policy version. Do not delete events when content is retired or when a projection must be rebuilt. A missing projection with existing events triggers a controlled rebuild, not an empty-state reset. Start with loading the selected card's history through its index; add pagination or incremental aggregates only when measured record volume requires them. Store all indexed timestamps in the same canonical UTC format so string comparisons preserve chronological order.
 
-Run schema changes through numbered upgrade migrations. Close old connections on `versionchange`; a blocked upgrade should explain that other tabs need to close or reload. A failed migration preserves source records and reports recovery options; it must not automatically delete the database. Never write or migrate learner data during React rendering.
+Run server schema changes through numbered, transactional migrations and retain a compatible backup/restore path. A failed migration must preserve source records and must not automatically recreate the database. The legacy IndexedDB adapter still closes old connections on `versionchange` and reports blocked opens. Never write learner data during React rendering.
 
 ## Application and repository interfaces
 
-These are in-process TypeScript interfaces, not HTTP endpoints. No backend API is required for the first release. The implemented topic-progress repository exposes:
+The client retains this in-process TypeScript repository interface; its account implementation uses the authenticated HTTP API described in [Account and progress design](account-progress.md#http-api):
 
 ```ts
 type CoverageResult =
@@ -300,9 +299,9 @@ interface ProgressRepository {
 }
 ```
 
-The coordinator validates active topic identity and content availability before a new completion, supplies a UTC change time, and uses the saved version (or 0 for a missing record). `getAll` validates every saved record; corrupt or unsupported data is reported without resetting the database. A failed initial load disables completion writes while reading flashcards remains available. Loading has its own visible state rather than displaying a fabricated 0% result. Save and load failures offer retry.
+The coordinator validates topic identity and content availability and supplies the version last read, or 0 for a missing record. The server independently validates these rules and uses its own UTC change time; the legacy `changedAt` input is not trusted as the account timestamp. A failed progress load disables writes instead of displaying fabricated zero completion. An expired or changed session returns to authentication without another account's records. Loading and request failures have visible retry paths; there is no fallback that reports a browser-only save as an account save.
 
-`setTopicCovered` reads the current record and compares its version inside one readwrite transaction. A match writes the new flag, sets `coveredAt` for completion or null for incomplete, updates `updatedAt`, and increments `version`. A mismatch returns `stale` with the saved record, without overwriting it. Both reads and writes resolve only after their transaction completes. Save failures keep the last confirmed state visible; a conflict adopts the newer record and requires an explicit retry. Focus/visibility refresh reloads saved records, while obsolete load results must not overwrite a later save.
+`setTopicCovered` reaches a server transaction that reads the session account's topic row and compares versions. A match writes the flag, completion/change timestamps, and incremented version. A mismatch returns `stale` with that account's saved record, without overwriting it. The HTTP response acknowledges only a committed result. Save failures keep the last confirmed state visible; a conflict requires explicit retry. Focus/visibility refresh checks session and records, while obsolete loads and late responses cannot overwrite a later save or a different account.
 
 The following is the broader **proposed review-stage interface**, extending the implemented completion capability:
 
@@ -402,13 +401,13 @@ sequenceDiagram
     App-->>UI: Saved values or recovery action
 ```
 
-The repository's `commitReview` algorithm is:
+The following is a proposed server-side `commitReview` algorithm, not an implemented endpoint. Every operation must be scoped to the authenticated account, including duplicate-command lookup and pending records:
 
-1. Open one readwrite transaction covering `reviewEvents`, `cardState`, `pendingReviews`, and `metadata`.
+1. Open one server database transaction covering the proposed `reviewEvents`, `cardState`, `pendingReviews`, and `metadata` records.
 2. Look up `commandId` before checking state version. If an event already exists with the same original command payload, remove any matching restaged pending command and return already-saved with a consistent current snapshot after transaction completion. Compare command fields, excluding derived sequence, expected version, and candidate state. The same ID with different feedback or other payload is a command conflict. If its projection needs repair, preserve the known saved event and return projection-outdated for recovery; never insert it again.
 3. For a new event, verify that command and candidate policy versions match the active metadata and current projection. Return policy-changed or projection-outdated when they do not. Then compare current state version with `expectedVersion`; return stale without adding an event if they differ. A missing state has version 0 only if no prior events exist. The service must reload, recompute, and retry with the same command ID after the learner chooses Reload and retry.
 4. Validate that the staged command matches, the candidate sequence is current `lastSequence + 1`, and the candidate state version is current version + 1. Add the event using its unique key, write the next state, and remove its pending command in that transaction.
-5. Return saved only when the transaction completes. A failure aborts all three changes. Do not perform network calls, timers, or unrelated asynchronous work inside the transaction. These constraints follow [IndexedDB transaction behaviour](https://developer.mozilla.org/en-US/docs/Web/API/IDBTransaction) and [transaction completion semantics](https://developer.mozilla.org/en-US/docs/Web/API/IDBTransaction/complete_event).
+5. Return saved only after commit. A failure rolls back all three changes. Do not perform network calls, timers, or unrelated asynchronous work inside the transaction. The eventual server schema and implementation must verify this atomicity before enabling review submission.
 
 The service computes domain results before the transaction; the state-version and active-policy checks make that proposed state safe to commit. Concurrent tabs cannot overwrite a newer projection with an older one. All saved/already-saved/stale snapshots are read or built consistently within their transaction and returned only after completion. Administrative policy activation also uses metadata compare-and-swap and refuses a lower activation revision; projection rebuilds retain lastSequence and increment state.version even when no new event is added. Refresh data on window focus/visibility changes; correctness still comes from transaction checks, not refresh timing.
 
@@ -416,7 +415,7 @@ The service computes domain results before the transaction; the state-version an
 
 If a pending command refers to unavailable content or an unsupported policy version, retain it and explain that it cannot currently be resumed; do not silently reinterpret its feedback. A stale submission preserves its original activity time. Duplicate clicks and acknowledgement failures reuse the same ID, so they cannot add a second review. This is an at-most-once recording guarantee per command ID, not a promise against device-data deletion or permanent storage failure.
 
-Topic coverage updates use their own readwrite transaction and version check. Stale coverage changes return the newer value and allow an explicit retry; they never overwrite review events or reset proficiency.
+Topic coverage already uses its own account-scoped server transaction and version check. Stale changes return the newer value and allow explicit retry; they must remain independent of future review events and proficiency.
 
 ## Scheduling and proficiency decisions
 
@@ -449,23 +448,25 @@ Notifications while closed require a separate delivery design and permission flo
 | Missing projection with existing history | Rebuild from events under an explicitly selected policy; never reset count/history to empty. |
 | Transaction abort between event/state writes | Neither review nor derived state partially persists; pending command remains recoverable. |
 | Reload before or after commit | Recover pending command before commit; reload committed state afterward without replay. |
-| Quota denied or storage unavailable | Explain that progress was not saved; retain the in-memory attempt if possible and offer retry. Reading content can continue without claiming persistence. |
-| Migration blocked or failed | Explain how to retry/close other tabs; never automatically erase learner records. |
+| API unavailable or save rejected | Explain that progress was not saved; retain the intended change where possible and offer retry. Never fall back to anonymous browser storage. |
+| Session expires or another account signs in | Clear previous displayed account data and require the current identity; reject old-account reads/writes even if a browser cookie changed mid-request. |
+| Invalid PIN, repeated guesses, or cross-origin mutation | Reject generically or throttle without leaking another account's records; mutation origin/header checks must apply to session actions too. |
+| Migration fails or legacy import is blocked | Preserve server/source records and explain retry; never automatically erase learner data. |
 | Retired content and new topics | Preserve history, exclude retired cards from due lists, and start new active topics uncovered. |
 | Empty topics and no evidence | Safe coverage calculation, unavailable learning state, and Not assessed yet. |
 | Date and policy boundaries | Fixed-clock tests for each agreed policy decision, including final step and timezone edges. |
 | Visual and assistive use | Verify mockup hierarchy, narrow layouts, enlarged text, keyboard order, contrast, labels, and diagram meaning in a real browser. |
 
-Use Vitest for pure rules and service workflows, React Testing Library for user interactions, and repository contract tests for persistence. The completion stage uses `fake-indexeddb` as a development-only test dependency to exercise adapter contracts and persistence across repository instances. Test IndexedDB transactions, reload/reopen, and upgrades in a real browser too; simulated IndexedDB and jsdom screen tests alone cannot establish browser correctness. Actual executed evidence and unavailable checks belong in [Project status](status.md).
+Use Vitest for rules and service workflows, React Testing Library for interactions, and real HTTP/temporary-database integration tests for the account server. Test separate users, restart durability, authorization, session lifecycle, leading-zero PINs, throttling, mutation-origin checks, import conflicts, and old-account responses. `fake-indexeddb` remains development-only support for the legacy adapter/import path. Real-browser account, cookie, reload/reopen, layout, and keyboard checks are still required; simulated UI tests alone cannot establish browser correctness. Actual evidence belongs in [Project status](status.md).
 
-Keep the existing typecheck, lint, test, and build pipeline, including content validation, learning interactions, coverage, progress coordination, and repository contracts. The manual browser checklist now includes completion surviving refresh/reopen, incomplete-state persistence, filters, cross-tab refresh/conflict handling, and storage failure recovery alongside API-free learning, direct links, production assets, keyboard operation, and responsive layouts. Later release checks add the Android wrapper's navigation and domain association when those stages are built.
+Keep the typecheck, lint, test, and client/server build pipeline. The manual checklist includes completion surviving server restart and sign-in from another profile, second-account isolation, explicit legacy import, session expiry/sign-out, refresh/reopen, incomplete-state persistence, filters, conflicts, and service failure recovery alongside card navigation and responsive/keyboard use. Later release checks add backup restoration and the Android wrapper's navigation/domain association.
 
 ## Delivery sequence and boundaries
 
 1. **Implemented:** validated content with six starter cards, topic/card navigation, the mockup's visual direction, question/reveal, and four inline learning sections. All 14 topics are listed; content authoring for the remaining topics is still outstanding.
-2. **Implemented:** explicit topic coverage, completion filters and summary, and the IndexedDB adapter with version checks, initial schema creation, failure handling, and retry. See status for the distinction between automated checks and real-browser verification.
+2. **Implemented:** explicit topic coverage, filters, summary, and the initial browser persistence adapter. The account extension makes authenticated server storage authoritative and retains that browser adapter only for explicit import. See status for actual automated and real-browser verification.
 3. Finalize review qualification and feedback, then add durable review commands, event history, and count projections.
 4. Finalize schedule/proficiency policies, add due views and assessed levels, and verify their edge cases.
-5. Add Vercel hosting and the Bubblewrap/TWA Android package, following the HLD. Native UI/storage and cross-device synchronization are not introduced implicitly by packaging.
+5. Deploy to an HTTPS Node host with persistent storage and tested backups, then add the Bubblewrap/TWA Android package. Account synchronization uses the server; native/offline storage is not introduced implicitly by packaging.
 
-The Android wrapper will use the same routes, React components, content, and storage adapter as the web application. Deployment must verify website ownership and navigation on a device, as described in the [Chrome Trusted Web Activity guide](https://developer.chrome.com/docs/android/trusted-web-activity/quick-start). A future offline cache, notification mechanism, or cloud sync service requires its own design extension.
+The Android wrapper will use the same routes, React components, content, and account API as the web application. Deployment must verify website ownership, session behavior, and navigation on a device, as described in the [Chrome Trusted Web Activity guide](https://developer.chrome.com/docs/android/trusted-web-activity/quick-start). An offline cache, notification mechanism, or alternative authentication/recovery method requires its own design extension.

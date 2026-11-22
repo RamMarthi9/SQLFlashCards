@@ -5,7 +5,7 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import { loadCatalog } from '../content/catalog'
 import type { CoverageResult, ProgressRepository } from '../domain/progress'
 import { createProgressRepository } from '../storage/indexedDbProgress'
-import App from './App'
+import { LearningApp as App } from './App'
 
 let factory: IDBFactory
 let repositories: ProgressRepository[]

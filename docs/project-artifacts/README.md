@@ -8,11 +8,12 @@ This folder is the canonical home for the project's design documents, learning s
 | [High level design](hld.md) | System components, responsibilities, data flow, and planned web/Android delivery. | System scope, component boundaries, or delivery choices change. |
 | [Low level design](lld.md) | Screens, component contracts, data structures, storage transactions, failure handling, and tests. | Implementation details or interactions are decided or changed. |
 | [Architecture](architecture.md) | Agreed technical direction, implementation boundaries, and mockup interpretation. | Architecture decisions or implemented-stage boundaries change. |
+| [Accounts and saved progress](account-progress.md) | Name/PIN accounts, API ownership, server storage, legacy import, authentication limits, and operation. | Account flows, authorization, persistence, or deployment requirements change. |
 | [Planned syllabus](syllabus.md) | The 14-topic general SQL learning scope and example card. | Topic scope, coverage semantics, or educational requirements change. |
 | [SQL syllabus index](sql-syllabus-index.md) | Numbered subtopics, prerequisites, outcomes, keyword lookup, and primary source references for the 14 modules. | Detailed learning scope or supporting references change. |
 | [App mockup](app-design-reference.png) | The user's visual reference for Android and web. | The user supplies or approves a revised visual reference. |
 
-The HLD and LLD distinguish the working flashcard flow and saved topic completion from planned review, proficiency, and delivery features. Start with [Project status](status.md) to see what is implemented and verified. Local run commands and test instructions remain in the [repository README](../../readme.md).
+The HLD and LLD distinguish the working flashcard flow and account-owned completion from planned review, proficiency, and production delivery. The account design records the move from browser-only storage to a server database; legacy browser progress is imported only explicitly. Start with [Project status](status.md) for implementation and verification evidence. Run commands and test instructions remain in the [repository README](../../readme.md).
 
 ## Maintenance workflow
 

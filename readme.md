@@ -2,7 +2,7 @@
 
 SQLFlashCards is a SQL learning app being built around short flashcards, syllabus coverage, and spaced revision.
 
-**First working flashcard flow.** Choose a topic, read a question, reveal its answer, explore Definition, Concept, Examples, and Syntax, and move between cards. Six starter cards cover SELECT, DISTINCT, WHERE, NULL, INNER JOIN, and LEFT JOIN. All 14 syllabus topics are listed; the other 11 show Content coming soon. You can mark available topics completed or incomplete, filter the topic list, and keep your progress after refreshing or reopening the same browser. Reminders, revision counts, and proficiency scoring are future work.
+**First working flashcard flow.** Choose a topic, read a question, reveal its answer, explore Definition, Concept, Examples, and Syntax, and move between cards. Six starter cards cover SELECT, DISTINCT, WHERE, NULL, INNER JOIN, and LEFT JOIN. All 14 syllabus topics are listed; the other 11 show Content coming soon. Sign up with a unique name and four-digit PIN, then save completed/incomplete topics separately in your account. Signing in to the same server from another browser restores your progress. Reminders, revision counts, and proficiency scoring are future work.
 
 ## Run locally
 
@@ -13,9 +13,11 @@ npm ci
 npm run dev
 ```
 
-Open the local URL printed by Vite. In Windows PowerShell, use `npm.cmd` instead of `npm` if script execution policy blocks `npm.ps1`.
+Open `http://127.0.0.1:5173`, or the local URL printed by the launcher. The command starts the account API and Vite together. In Windows PowerShell, use `npm.cmd` instead of `npm` if script execution policy blocks `npm.ps1`. Restart this command after editing server code; client changes use Vite's normal refresh behavior.
 
-`npm ci` installs the versions in `package-lock.json`. Commit changes to both `package.json` and the lockfile when updating dependencies. No environment variables, database server, account, or credentials are needed. The browser creates the local IndexedDB progress store when the app opens.
+`npm ci` installs the versions in `package-lock.json`. Commit both files when updating dependencies. Local development needs no separate database installation or hosting account: the Node server creates `user-data/accounts.sqlite` and a private development PIN pepper in `user-data/pin-pepper`. Keep this ignored directory between runs. Do not commit it, and do not delete or replace its pepper while retaining accounts that depend on it.
+
+Sign up using only Name and a four-digit PIN. Names must be unique without case distinctions. PINs can begin with zero and are never stored in the browser. No email is required, so forgotten-PIN recovery is not available in this stage. The four-digit PIN is a limited credential intended for this learning app; the server adds hashing and attempt limits.
 
 TypeScript 6 and Vitest 4 are pinned to compatible versions of the lint tooling and Testing Library matchers. Upgrade these packages together only after the full checks pass; library declarations are checked too.
 
@@ -23,12 +25,13 @@ TypeScript 6 and Vitest 4 are pinned to compatible versions of the lint tooling 
 
 | Command | Purpose |
 | --- | --- |
-| `npm run typecheck` | Check the application and tooling with strict TypeScript. |
+| `npm run typecheck` | Check the client, server, and tooling with strict TypeScript. |
 | `npm run lint` | Run ESLint. |
 | `npm test` | Run the test suite once and exit. |
 | `npm run test:watch` | Run tests while developing. |
-| `npm run build` | Create the production assets in `dist/`. |
-| `npm run preview` | Serve the production build locally after building. |
+| `npm run build` | Build the client assets and compiled Node server. |
+| `npm run preview` | Serve the built website and API locally after building, normally on port 4173. |
+| `npm start` | Start the production server with an HTTPS origin, private pepper, and durable data directory configured. |
 | `npm run check` | Run type checking, linting, tests, and the production build. |
 
 The GitHub Actions workflow installs dependencies with `npm ci` and runs the same checks. A workflow definition alone is not evidence of a passing run; inspect the PR checks for the outcome. Local test evidence and any checks that could not run belong in the stage's PR description.
@@ -40,38 +43,49 @@ The November 18, 2026 audit reported a development-only `picomatch` denial-of-se
 ## Manual verification
 
 1. In Windows PowerShell, run `npm.cmd ci` if dependencies are not installed, then `npm.cmd run check` for type checking, linting, automated tests, and the production build.
-2. Run `npm.cmd run dev` and open the URL Vite prints. Confirm all 14 topics appear, with starter cards in Basic queries, Filtering, and Joins and Content coming soon for the other topics.
+2. Run `npm.cmd run dev` and open the printed frontend URL. Create a test account using a unique Name and four-digit PIN, including a leading zero if desired. Confirm all 14 topics appear, with starter cards in Basic queries, Filtering, and Joins and Content coming soon for the others.
 3. Open Basic queries. Read the first question and confirm its answer is hidden; select Reveal answer to show it. Select each of Definition, Concept, Examples, and Syntax. Only one panel should be open; select the same tile again to close it.
 4. Use Next and Previous. Confirm the card position changes, the answer and section reset, and navigation is disabled at the first/last card. Use browser Back and Forward and confirm they restore the correct card with its answer hidden.
 5. Open Joins and the Left Join card. Check its diagram, then compare the input and result tables in Examples. Open a section with the keyboard, activate its Close button, and confirm focus returns to that section's tile.
 6. Reload a card URL such as `#/topics/joins/cards/joins-left-basic`. It should reopen that card with the answer hidden. Try `#/topics/joins/cards/missing` and confirm a clear unavailable-content view offers a return to Topics.
 7. Check at 320, 390, 768, and 1280 px widths and with enlarged text. Text and controls should remain readable; SQL and table panels may scroll horizontally without causing whole-page overflow. Navigate with Tab and Enter/Space and inspect the browser console for errors.
 8. On Topics, mark Basic queries completed. Wait for the saved result, then confirm its completed status and the completed/total summary. Switch between All, Completed, and Incomplete; the same topic should move between the matching views without losing access to its cards. Topics without cards cannot be newly marked completed.
-9. Refresh the page, then close and reopen the browser using the **same URL and browser profile**. Basic queries should remain completed. Open one of its cards, mark the topic incomplete, and refresh again; it should remain incomplete. Revealing answers and navigating cards should never change completion by themselves.
-10. Open the same app URL in two tabs. Change a topic in one, then return to the other; its saved state should refresh when it regains focus. A stale save must show the newer state and offer an explicit retry rather than silently overwrite it. If storage is unavailable, check that the app explains the failure, offers retry, and still lets you read cards without claiming a save succeeded.
-11. Stop the dev server and run `npm.cmd run preview` after the successful build. Repeat the topic, card, deep-link, progress, and browser-console checks using the preview URL. A different port is a different origin and starts with separate browser storage.
+9. Refresh, then close and reopen the browser. Basic queries should remain completed. Sign out and sign in again; the account should still show it completed. Use a separate browser profile to sign in to the **same website/server** and confirm the same result. Mark the topic incomplete there, refresh the first profile, and confirm that change is saved too.
+10. Sign out and create a second test account with a different name. It must start with its own incomplete topics and never show the first account's choices. Sign back into the first account and confirm its records are unchanged. In an isolated test profile, clearing site data should require sign-in again but should not remove the account's server progress.
+11. If this browser has progress from the earlier version, sign into the intended account and use the explicit import control only for your own records. Confirm that existing account choices are preserved and the source browser records are retained. A second sign-in must not automatically claim the browser's old progress.
+12. Open the same account in two tabs. Change a topic in one and return to the other; it should refresh on focus. A stale save must show the newer state and require explicit retry. Sign out in one tab, then return to the other; it must not keep saving under a stale account. Invalid PINs, unavailable service, and expired sessions should produce clear errors without reporting a save succeeded.
+13. Stop and restart the server without removing `user-data/`, then sign in again and confirm progress remains. After a successful build, run `npm.cmd run preview` and repeat the account, card, and progress checks. The configured server data directory determines which account records are available. Cookies are not scoped by port, so development and preview on `127.0.0.1` may reuse the same session cookie; sign in if prompted. A different hostname or profile has a separate cookie context.
 
 These are repeatable test instructions; actual completed checks are recorded in [Project status](docs/project-artifacts/status.md). Answers and open sections reset on navigation or refresh; explicit topic completion is saved separately. Completion records what you chose to mark done, not an assessment of mastery or a claim that the whole topic has authored cards. This version does not execute SQL, count revisions, assign proficiency, or schedule reminders.
 
-Progress belongs to this website's origin and browser profile. It is not synchronized or backed up to an account. Clearing site data removes it, and private browsing or browser storage policies can limit how long it is kept. Local storage does not provide offline launching; the local server still needs to be running to open the app.
+Account progress belongs to the server database, not a browser profile. Clearing browser data or using a private profile removes/limits the session cookie; signing in again retrieves server progress. The server must remain available, and its data directory must be preserved and backed up. No offline-launch or offline-write queue is implemented.
+
+## Production hosting
+
+This repository now needs a Node host with persistent storage. A static-only deployment is insufficient for accounts and progress. Build with `npm run build`, then configure `APP_ORIGIN` to the exact HTTPS website origin, `SQLFLASHCARDS_PIN_PEPPER` to a private secret of at least 32 characters, and `DATA_DIR` to a durable directory before using `npm start`. Set `HOST` and `PORT` for the deployment network. Keep the same pepper when reusing the database and establish consistent backups and a tested restore procedure. Local `npm run preview` is a test server, not a production deployment.
+
+The [account design](docs/project-artifacts/account-progress.md#running-and-operating-the-service) describes settings, sessions, PIN protection, data ownership, and operating limits. No production website, hosting service, automatic backup, or account-recovery service has been provisioned in this stage.
 
 ## Repository layout
 
 ```text
 src/
   main.tsx              React entry point
-  app/                  Screens, routes, useTopicProgress coordinator, components, styles, tests
+  app/                  Account/session UI, screens, routes, progress coordinator, styles, tests
   domain/               Topic progress records and repository contracts
-  storage/              Native IndexedDB progress adapter and contract tests
+  storage/              Account HTTP repository and legacy IndexedDB import adapter
   content/              Versioned JSON starter cards, content types, validation, and tests
   styles.css            Shared page styles
   test/setup.ts         Test environment setup
+server/                 Node account/progress API, SQLite persistence, and integration tests
+scripts/                Development launcher and build support
 docs/project-artifacts/
   README.md             Artifact index and maintenance workflow
   status.md             Current progress and verification record
   hld.md                High level system design
   lld.md                Low level implementation design
   architecture.md       Architecture decisions and stage boundaries
+  account-progress.md   Account API, ownership, authentication, import, and operating design
   syllabus.md           Planned SQL syllabus and example card
   sql-syllabus-index.md Indexed SQL topics and source references
   app-design-reference.png  User's Android and web mockup
@@ -80,15 +94,15 @@ AGENTS.md               Artifact maintenance guidance for project work
 package-lock.json       Reproducible dependency installation
 ```
 
-The strict TypeScript, ESLint, Vite, and Vitest configuration files live at the repository root. IndexedDB access stays behind a repository interface; components do not open database transactions directly.
+The strict TypeScript, ESLint, Vite, and Vitest configuration files live at the repository root. The client calls a repository interface; server transactions and account authorization stay outside UI components.
 
 ## Agreed direction
 
 - React and strict TypeScript provide the interface; Vite handles local development and builds.
 - GitHub is the source of truth for code, versioned JSON flashcards, tests, and documentation.
-- IndexedDB stores explicit topic completion locally. Cloud accounts and synchronization are a later phase.
+- A Node API stores explicit completion per account in persistent SQLite. The previous IndexedDB records are an optional, explicit import source only.
 - Teach SQL concepts broadly, with no single database engine as the default teaching dialect. Label database-specific syntax where needed. The MVP will display SQL examples without executing user-supplied SQL.
-- Vercel will host the web application in a later deployment stage. Android distribution will use a Trusted Web Activity through Bubblewrap in a later stage.
+- Production hosting needs HTTPS and durable server storage; the earlier static-only Vercel plan is superseded. Android distribution remains a planned Trusted Web Activity through Bubblewrap.
 
 Topic selection, answer reveal, inline learning sections, card navigation, and saved completed/incomplete topics are implemented. Later stages will add performance feedback, revision counts, and proficiency based on performance. Revision reminders must support the requested **1, 3, 5, 7, 20, and 30 day** rule; its scheduling semantics and the proficiency formula still need to be specified before implementation.
 

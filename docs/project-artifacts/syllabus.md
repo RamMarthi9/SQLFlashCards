@@ -1,6 +1,6 @@
 # Planned SQL syllabus
 
-This is the educational scope for SQLFlashCards content. The app lists all 14 topics and now loads six starter cards across Basic queries, Filtering, and Joins; the other 11 topics show Content coming soon. Learners can explicitly mark topics with available cards completed or incomplete and save that choice in their browser. SQLFlashCards teaches general SQL concepts, with database-specific syntax and behaviour labelled in relevant examples. Feature availability and exact syntax can vary between databases.
+This is the educational scope for SQLFlashCards content. The app lists all 14 topics and loads six starter cards across Basic queries, Filtering, and Joins; the other 11 topics show Content coming soon. Learners explicitly mark topics with available cards completed or incomplete and save that choice separately in their account on the server. SQLFlashCards teaches general SQL concepts, with database-specific syntax and behaviour labelled in relevant examples. SQLite's use for account storage does not designate a teaching dialect. Feature availability and exact syntax can vary between databases.
 
 Use the separate [SQL syllabus index](sql-syllabus-index.md) for numbered subtopics, prerequisites, learning outcomes, keyword lookup, and researched source links. This document retains the concise 14-topic checklist and coverage model.
 
@@ -8,7 +8,7 @@ Use the separate [SQL syllabus index](sql-syllabus-index.md) for numbered subtop
 
 A topic is **covered** when the learner explicitly marks it completed and **uncovered** otherwise; the interface calls these states **Completed** and **Incomplete**. A learner can return a topic to incomplete. Completion is separate from understanding: a completed topic can still contain cards that need revision.
 
-New learners start with every topic incomplete. Existing notes or source material do not count as learner completion. The implemented progress calculation is:
+New accounts start with every topic incomplete. Existing notes or source material do not count as completion, and another account's choices never contribute to the current account's summary. Earlier browser progress can be imported explicitly without overwriting existing account choices. The progress calculation is:
 
 ```text
 Progress (%) = covered topics / total topics * 100
@@ -39,7 +39,7 @@ No topics are marked covered in this initial plan.
 - [ ] **13. Relational design and transactions:** keys, relationships, normalization basics, ACID, `COMMIT`, and `ROLLBACK`.
 - [ ] **14. Performance and interview practice:** indexes, query plans, duplicate detection, highest-salary questions, and query debugging.
 
-**Initial learning plan: 0 of 14 topics covered (0%).** This is a documentation checklist, not a copy of anyone's saved progress. Interactive completion is kept locally in the app and does not edit this document.
+**Initial learning plan: 0 of 14 topics covered (0%).** This is a documentation checklist, not a copy of anyone's saved progress. Interactive completion belongs to each account in the server database and does not edit this document.
 
 ## Example card
 
