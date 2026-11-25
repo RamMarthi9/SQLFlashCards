@@ -1,0 +1,8 @@
+user-data/
+.env*
+*.sqlite*
+*.db*
+progress-exports/
+backups/
+coverage/
+.git/

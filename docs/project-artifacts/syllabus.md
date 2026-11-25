@@ -1,6 +1,6 @@
 # Planned SQL syllabus
 
-This is the educational scope for SQLFlashCards content. The app lists all 14 topics and loads six starter cards across Basic queries, Filtering, and Joins; the other 11 topics show Content coming soon. Learners explicitly mark topics with available cards completed or incomplete and save that choice separately in their account on the server. SQLFlashCards teaches general SQL concepts, with database-specific syntax and behaviour labelled in relevant examples. SQLite's use for account storage does not designate a teaching dialect. Feature availability and exact syntax can vary between databases.
+This is the educational scope for SQLFlashCards content. The app lists all 14 topics and loads six starter cards across Basic queries, Filtering, and Joins; the other 11 topics show Content coming soon. Learners explicitly mark topics with available cards completed or incomplete and save that choice separately in their account on the server. SQLFlashCards teaches general SQL concepts, with database-specific syntax and behaviour labelled in relevant examples. PostgreSQL for hosted account storage and SQLite for local development do not designate a teaching dialect. Feature availability and exact syntax can vary between databases.
 
 Use the separate [SQL syllabus index](sql-syllabus-index.md) for numbered subtopics, prerequisites, learning outcomes, keyword lookup, and researched source links. This document retains the concise 14-topic checklist and coverage model.
 
