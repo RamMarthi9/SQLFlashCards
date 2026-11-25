@@ -23,6 +23,10 @@ service-account*.json
 # Learner data and local database exports
 user-data/
 progress-exports/
+backups/
+*.dump
+*.dump.enc
+*.sql.enc
 *.db
 *.db-*
 *.sqlite

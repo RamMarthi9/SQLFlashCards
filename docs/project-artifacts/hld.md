@@ -2,7 +2,7 @@
 
 SQLFlashCards uses a shared React and TypeScript learning interface and a Node.js account service. It teaches SQL through flashcards and tracks each account's syllabus completion in a server database. The Android delivery plan reuses the web interface; an Android package is not yet built.
 
-This design follows the [architecture decisions](architecture.md), [14-topic syllabus](syllabus.md), and [user's visual mockup](app-design-reference.png). The learning flow includes all 14 topic headings, six starter cards across Basic queries, Filtering, and Joins, answer reveal, inline learning sections, and card navigation. The other 11 topics show Content coming soon. The account stage adds simple name-and-four-digit-PIN sign-up/sign-in and server-owned Completed/Incomplete records, retaining the existing filters and summary. Review rules, production hosting, and Android packaging remain planned. See [Account and progress design](account-progress.md) for the account/API boundary and operational requirements.
+This design follows the [architecture decisions](architecture.md), [14-topic syllabus](syllabus.md), and [user's visual mockup](app-design-reference.png). The learning flow includes all 14 topic headings, six starter cards across Basic queries, Filtering, and Joins, answer reveal, inline learning sections, and card navigation. The other 11 topics show Content coming soon. The account stage adds simple name-and-four-digit-PIN sign-up/sign-in and server-owned Completed/Incomplete records, retaining the existing filters and summary. The hosting path uses Vercel and Neon; its deployment and backup evidence are tracked in [Project status](status.md). Review rules and Android packaging remain planned. See [Account and progress design](account-progress.md) for the account/API boundary and operational requirements.
 
 See the [Low level design](lld.md) for implemented component and storage contracts, proposed review flows, screen interactions, and verification requirements.
 
@@ -12,11 +12,11 @@ The separate [SQL syllabus index](sql-syllabus-index.md) expands the same 14 lea
 
 The learning experience will provide topic selection, questions and answer reveal, Definition, Concept, Examples, and Syntax sections, performance feedback, covered/uncovered topics, revision counts, and proficiency levels. Revision scheduling must support the requested 1, 3, 5, 7, 20, and 30 day rule once its timing semantics are defined.
 
-The app displays SQL examples without executing learner queries. Each learner signs in with a unique name and four-digit PIN; no email field is required. Progress belongs to the account and is read from the same website's server when signing in from another browser. Clearing browser data removes the session, not the server's progress records. The learning scope remains general SQL; using SQLite for application storage does not make SQLite the teaching dialect.
+The app displays SQL examples without executing learner queries. Each learner signs in with a unique name and four-digit PIN; no email field is required. Progress belongs to the account and is read from the same website's server when signing in from another browser. Clearing browser data removes the session, not the server's progress records. The learning scope remains general SQL; PostgreSQL in production and SQLite locally are application storage choices, not teaching dialects.
 
 ## System structure
 
-The diagram distinguishes client presentation from server-owned account data. Browser profiles share an account's progress only when they sign in to the same server/database; production hosting is still a separate delivery step.
+The diagram distinguishes client presentation from server-owned account data. Browser profiles share an account's progress only when they sign in to the same service/database. The user selected free hosting plans and new online accounts; local test records remain on the development computer. The diagram shows the production design, not evidence that its services are provisioned.
 
 ```mermaid
 flowchart TD
@@ -28,9 +28,11 @@ flowchart TD
     Content --> JSON[Versioned JSON topics and cards]
     App --> Rules[Coverage, revision and proficiency rules]
     App --> HTTP[Account-bound HTTP repository]
-    Auth --> API[Node account and progress API]
+    Auth --> API[Vercel Node account and progress API]
     HTTP --> API
-    API <--> DB[(Persistent SQLite database)]
+    API <--> DB[(Private Neon PostgreSQL database)]
+    DB --> Backup[Encrypted daily backup]
+    Backup --> Archive[Separate private backup repository artifact]
     Legacy[(Legacy IndexedDB)] --> Import[Explicit import of own progress]
     Import --> HTTP
 ```
@@ -44,14 +46,15 @@ flowchart TD
 | Account controller | Sign up, sign in, sign out, check sessions, and separate displayed account state. | Name/PIN form and session boundary; no PIN or session token in browser storage. |
 | HTTP repository | Read and write progress through the current session, with an expected-account guard. | Account-scoped requests and version-conflict handling replace browser storage as the authoritative path. |
 | Node API | Authenticate sessions, validate requests, enforce account ownership, and commit records. | Same-origin session and progress endpoints, PIN hashing, attempt limits, and server timestamps. |
-| SQLite | Keep accounts, sessions, attempt limits, and account/topic progress on the server. | Persistent file under the configured data directory; deployment must retain and back it up. |
+| Account database | Keep accounts, sessions, attempt limits, and account/topic progress privately. | Neon PostgreSQL for Vercel; a persistent SQLite file for local development. Both enforce account ownership and transactional saves. |
 | Legacy IndexedDB | Preserve prior browser-only progress for optional import. | `sqlflashcards`, version 1, `topicProgress`; never automatically assigned to an account or deleted by import. |
-| Website hosting | Serve the UI and API over HTTPS with durable server storage. | Not deployed. The earlier static-only Vercel plan is insufficient for this account stage. |
+| Website hosting | Serve the UI and API over HTTPS with external durable storage. | Vercel deployment configuration plus private Neon database; live status is recorded separately. |
+| Backups | Recover records after accidental loss or corruption. | Neon restore history plus daily encrypted exports retained 30 days in a separate private GitHub repository's Actions artifacts; reviewed workflow code is SHA-pinned, and activation and restore tests are release requirements. |
 | Android package | Open the hosted web experience through a Trusted Web Activity, built using Bubblewrap. | Planned; no Android package. |
 
 The UI calls a progress coordinator and repository interface rather than opening server transactions. The server derives ownership from the authenticated session, validates topic identity and content availability, and supplies authoritative change times. Client account IDs are stale-request guards, never authorization. Future review calculations follow this account boundary.
 
-The browser keeps an HttpOnly session cookie; the server keeps account progress. Sign-out or session expiry clears displayed account state. A failed request is visible and is not replaced with an anonymous browser save. Existing browser-only records can be copied only through an explicit import action, without overwriting account records. Server persistence still needs operational backups; retaining a browser cookie is neither storage durability nor backup.
+The browser keeps an HttpOnly session cookie; the database keeps account progress independently of a Vercel deployment or function instance. Sign-out or session expiry clears displayed account state. A failed request is visible and is not replaced with an anonymous browser save. Existing browser-only records can be copied only through an explicit import action, without overwriting account records. The [deployment runbook](deployment.md) defines backup activation, retention limits, and restoration; retaining a browser cookie is neither storage durability nor backup.
 
 ## Screens and visual direction
 
@@ -102,14 +105,15 @@ The precise action that qualifies as a completed revision must be settled before
 ```mermaid
 flowchart LR
     Source[Code and content in GitHub] --> Checks[TypeScript, ESLint and Vitest checks]
-    Checks --> Build[Vite client and TypeScript server build]
-    Build --> Release[Release step - planned]
-    Release --> Host[HTTPS Node host with persistent storage - planned]
+    Checks --> Build[Vite client and Node function build]
+    Build --> Release[Reviewed release]
+    Release --> Host[Vercel HTTPS website and API]
+    Host <--> DB[(Private Neon database)]
     Host --> Browser[Web browser]
     Host --> Android[Android TWA - planned]
 ```
 
-Node.js runs both the application server and development tools. The development command starts the API and Vite; production builds contain client assets and a compiled server. GitHub Actions installs locked dependencies and runs checks on pull requests and pushes to main; it does not deploy the app. A static host alone cannot execute the account API or retain its database. Production requires HTTPS, a persistent data volume, a private PIN pepper, and a backup/restore process.
+Node.js runs the API and development tools. The development command starts the local SQLite API and Vite. Vercel builds the browser assets and a same-origin Node function, while Neon stores account data outside Vercel's temporary filesystem. GitHub Actions installs locked dependencies and checks pull requests and main; publication and production release remain distinct actions. Configure Vercel against the reviewed GitHub source, using private production settings for the database connection and stable PIN pepper. The [deployment runbook](deployment.md) covers HTTPS, free-plan limits, backups, restoration, and the release checklist. No paid upgrade is authorized.
 
 For Android, Bubblewrap will create the package that opens the hosted app through a Trusted Web Activity. Website ownership must be verified using Digital Asset Links. This is a wrapper around the web experience, so the learning UI and rules remain in the shared web code. See the [Chrome Trusted Web Activity guide](https://developer.chrome.com/docs/android/trusted-web-activity/quick-start).
 
@@ -119,7 +123,7 @@ The proposed first reminder capability is an in-app due list calculated from sav
 
 Browsers control service-worker execution and background scheduling. Adding the account API does not implement a reminder scheduler or promise exact closed-app alarms; see [MDN's background-operation guidance](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/Offline_and_background_operation).
 
-Offline launching requires a separate asset-caching and write-queue design. Account progress is shared through the running server; requests require a connection. Automated backups, account recovery, and stronger authentication are separate capabilities. A four-digit PIN has only 10,000 possible values: hashing and attempt limits reduce exposure but do not make it a strong credential. No email-based recovery is available in this two-field design.
+Offline launching requires a separate asset-caching and write-queue design. Account progress is shared through the running service; requests require a connection. The backup workflow protects stored records but does not provide forgotten-PIN recovery. A four-digit PIN has only 10,000 possible values: hashing and attempt limits reduce exposure but do not make it a strong credential. No email-based recovery is available in this two-field design.
 
 ## Validation and remaining decisions
 
@@ -133,4 +137,4 @@ Before implementing the corresponding features, settle these decisions:
 - How content IDs and saved-data versions evolve as the authored catalogue and learner records grow.
 - Whether reminders require closed-app delivery, and whether offline launch or progress export is needed for the first release.
 
-The next implementation step is to expand the reviewed card collection and settle what counts as a revision before adding durable review history and counts. Complete outstanding real-browser persistence and visual checks before release. Scheduling/proficiency rules, hosting, and Android packaging remain separate delivery steps.
+The immediate delivery step is to complete the Vercel/Neon provisioning, verify HTTPS and two-account persistence in a real browser, and prove backup restoration before declaring the website ready. Then expand the reviewed card collection and settle what counts as a revision before adding durable review history and counts. Scheduling/proficiency rules and Android packaging remain separate delivery steps.

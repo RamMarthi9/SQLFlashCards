@@ -1,0 +1,52 @@
+name: Database backup
+
+on:
+  workflow_call:
+    inputs:
+      source_ref:
+        description: Reviewed 40-character source commit matching this reusable workflow
+        required: true
+        type: string
+    secrets:
+      BACKUP_DATABASE_URL:
+        required: true
+      BACKUP_ENCRYPTION_KEY:
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: database-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    if: github.event.repository.private == true && github.ref == 'refs/heads/main' && github.repository == 'RamMarthi9/SQLFlashCards-backups'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    container: postgres:17-bookworm
+    steps:
+      - name: Check out reviewed source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          repository: RamMarthi9/SQLFlashCards
+          ref: ${{ inputs.source_ref }}
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '22'
+      - name: Create encrypted database backup
+        env:
+          BACKUP_DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+          BACKUP_ENCRYPTION_KEY: ${{ secrets.BACKUP_ENCRYPTION_KEY }}
+        run: node scripts/backup-database.mjs --output "$RUNNER_TEMP/sqlflashcards-backup.enc"
+      - name: Retain encrypted backup for 30 days
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: sqlflashcards-backup-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/sqlflashcards-backup.enc
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 0

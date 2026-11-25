@@ -12,7 +12,7 @@ After sign-in, the learner sees the account's own completed/incomplete topics an
 
 ## Data ownership
 
-The Node server stores data in a persistent SQLite file, normally `user-data/accounts.sqlite`. SQLite is application infrastructure and does not change the app's general SQL syllabus.
+The Node API stores hosted account data in private Neon PostgreSQL. Local development retains the persistent SQLite file, normally `user-data/accounts.sqlite`. Both adapters preserve the same account/progress contract; neither database engine changes the app's general SQL syllabus. GitHub contains code and lesson content, not private account records. The user chose new online accounts, so local test accounts are not migrated or removed.
 
 | Logical record | Ownership and purpose |
 | --- | --- |
@@ -21,7 +21,7 @@ The Node server stores data in a persistent SQLite file, normally `user-data/acc
 | Topic progress | Composite account/topic identity, completion flag, completion/change timestamps, and optimistic-concurrency version. |
 | Attempt limit | Persistent account/IP counters and windows for authentication and account creation. Restarting the process does not reset them. |
 
-Every progress request is authorized by the current session. The expected-account header is only an additional stale-request guard: it cannot authenticate a caller or select another account's data. A write reads and compares the existing version inside the same transaction that updates the row. A missing row has version 0; a stale write returns the current record without changing it. The server supplies timestamps and validates active topic identity and availability before allowing new completion.
+Every progress request is authorized by the current session. The expected-account header is only an additional stale-request guard: it cannot authenticate a caller or select another account's data. A write reads and compares the existing version inside the same transaction that updates the row. A missing row has version 0; a stale write returns the current record without changing it. PostgreSQL also serializes concurrent first writes before the row exists, while shared database attempt counters apply across Vercel instances. The server supplies timestamps and validates active topic identity and availability before allowing new completion.
 
 Clearing browser site data removes the session cookie and any old local records, but does not delete the account or server progress. Signing in again restores server progress. Another browser can see the same records only by signing in to the same server with the same account. The website/API must be running; there is no offline queue or automatic browser fallback.
 
@@ -44,7 +44,7 @@ Errors use `{ error: { code, message } }`. The client distinguishes unavailable 
 
 - PIN verifiers use salted, deliberately slow `scrypt` hashing with a secret pepper kept outside the database. Raw PINs are neither stored nor logged. Comparison uses a constant-time check.
 - Sessions use random 256-bit tokens and store only their hashes on the server. Cookies are HttpOnly, SameSite=Strict, scoped to the site, and Secure in production; sessions expire after 30 days. Sign-out revokes the token server-side.
-- Failed sign-in attempts are limited per normalized account and per connecting IP; account limits also apply across different IPs. Account creation is separately limited. Counters survive restarts. Forwarded IP headers are ignored unless the socket peer matches the single explicitly configured trusted proxy.
+- Failed sign-in attempts are limited per normalized account and per connecting IP; account limits also apply across different IPs. Account creation is separately limited. Counters survive restarts and are shared by function instances. The Vercel adapter accepts only the platform-overwritten `x-vercel-forwarded-for` single-IP value; the standalone server trusts forwarding headers only from its one configured socket peer.
 - The selected policy permits at most 5 failed attempts per account in 15 minutes and 10 per day, with an IP limit of 20 in 15 minutes; sign-up is limited to 5 per IP per hour. A blocked attempt returns a retry delay instead of testing additional PINs. These are application limits, not a claim of strong PIN security.
 - Mutation origin/header checks protect browser session actions; authorization and expected versions protect ownership and concurrent updates. A bounded body size and authentication work limits constrain avoidable server load.
 
@@ -60,7 +60,7 @@ Legacy progress in IndexedDB is not automatically assigned to an account, becaus
 
 `npm run build` creates the client and compiled server. `npm run preview` serves the built website and API locally, normally on port 4173. `npm start` starts the production server; it requires a production HTTPS origin and a private PIN pepper. The root [README](../../readme.md) is the canonical command reference.
 
-Run from the repository root. A release must retain `dist/`, `dist-server/`, `package.json` (ES module mode), and `src/content/catalog.json`; the server reads the catalogue from that path to validate topic changes. Deploying only the browser assets or omitting the server's catalogue is insufficient.
+Run standalone commands from the repository root. A standalone release retains `dist/`, `dist-server/`, `package.json` (ES module mode), and `src/content/catalog.json`; the server reads that catalogue to validate topic changes. The Vercel configuration serves `dist/` and bundles the Node API with its catalogue. Deploying only browser assets is insufficient for accounts.
 
 Cookies are scoped by host/path rather than port: development and preview on `127.0.0.1` may reuse a session cookie. Legacy IndexedDB is scoped to the full origin, including port, so importing old browser records must be done from the origin where they were stored. The account database selected by `DATA_DIR` determines the server records independently of either browser storage context.
 
@@ -69,14 +69,18 @@ Cookies are scoped by host/path rather than port: development and preview on `12
 | `HOST` | Server bind address; local use defaults to loopback. Choose explicitly for the production network boundary. |
 | `PORT` | Server listen port. |
 | `APP_ORIGIN` | Exact website origin accepted for mutation requests; production requires HTTPS. |
-| `DATA_DIR` | Persistent data directory; defaults to ignored `user-data/` for local development. |
+| `DATA_DIR` | SQLite data directory for standalone/local operation; defaults to ignored `user-data/`. Not a Vercel persistence mechanism. |
+| `DATABASE_URL` | Private Neon pooled TLS connection for the Vercel PostgreSQL store. Never exposed as a browser build variable. |
 | `SQLFLASHCARDS_PIN_PEPPER` | Private secret of at least 32 characters. Production requires an explicit value. Development generates and retains `user-data/pin-pepper` if no value is supplied. |
 | `API_PORT` | Development launcher override for the API port; does not change the frontend's origin. |
 | `TRUSTED_PROXY_IP` | Optional exact socket-peer IP for one trusted reverse proxy. Only that peer may supply the rightmost `X-Forwarded-For` client address. |
+| `NODEJS_HELPERS` | Set to `0` at build time and runtime through Vercel Production settings to preserve the Node request stream for the shared handler. |
 
-Keep the data directory and PIN pepper across restarts and deployments. Losing the pepper makes existing PIN verifiers unusable; startup rejects a pepper that does not match an existing database. Back up the database consistently with SQLite's WAL/journal mode and retain the secret separately; test restoration before serving real users. A host with ephemeral request filesystems or static-only deployment cannot preserve this database correctly.
+Keep the database and PIN pepper across restarts and deployments. Losing the pepper makes existing PIN verifiers unusable; initialization rejects a pepper that does not match the database. For local SQLite, retain the data directory and use a consistent backup compatible with WAL/journal mode. Vercel uses Neon instead of a function-local SQLite file. The [deployment runbook](deployment.md) defines encrypted PostgreSQL exports, secret recovery, retention, and restoration into an isolated database.
 
-A production operator must configure TLS, persistent storage, process management, request-size/rate controls, and a trusted network/proxy boundary. Behind one HTTPS reverse proxy, set `TRUSTED_PROXY_IP` to its actual direct peer and configure that proxy to append or overwrite `X-Forwarded-For` using the real connecting client. Only the rightmost valid address is used; client-supplied forwarding headers from other peers are ignored. Without this setting, proxied users share the proxy's IP attempt budget. Multi-proxy chains need an explicit deployment design rather than broad header trust. This stage does not provision services or deploy a website.
+A standalone production operator must configure TLS, persistent storage, process management, request-size/rate controls, and a trusted network/proxy boundary. Behind one HTTPS reverse proxy, set `TRUSTED_PROXY_IP` to its actual direct peer and configure that proxy to append or overwrite `X-Forwarded-For` using the real connecting client. Only the rightmost valid address is used; client-supplied forwarding headers from other peers are ignored. Without this setting, proxied users share the proxy's IP attempt budget. Multi-proxy chains need an explicit deployment design rather than broad header trust.
+
+The Vercel path has a dedicated deployment adapter: it requires `VERCEL=1`, `VERCEL_ENV=production`, an explicit HTTPS origin, a private PostgreSQL connection, and a stable pepper. Preview API execution is disabled; production secrets belong only to Production scope. Missing configuration fails closed rather than creating a database or pepper in temporary storage. Vercel terminates HTTPS, and account data persists in Neon across deployments. The store creates and validates the `sqlflashcards` schema transactionally and keeps a bounded connection pool. The user authorized free plans only; service provisioning and successful live checks must be recorded in [status](status.md), separately from source preparation.
 
 ## Verification and follow-up
 
@@ -84,4 +88,4 @@ The automated checks should cover separate accounts, unauthorized/forged-account
 
 Manual checks must confirm that a topic remains saved after refresh and browser restart, after signing out/in, and from a separate profile connected to the same server. A second account must begin independently. Clearing data in an isolated test profile should require sign-in again and restore its saved server progress. Test keyboard operation, narrow layouts, expired-session recovery, and service outages before release.
 
-Production hosting and backup restoration, account recovery, stronger authentication, review history, scheduling/proficiency rules, and Android packaging remain follow-up work.
+This hosting release includes Vercel/Neon deployment and encrypted backup/restore tooling; live deployment and restore evidence remain separate release requirements in status. Account recovery, stronger authentication, review history, scheduling/proficiency rules, and Android packaging remain follow-up work.

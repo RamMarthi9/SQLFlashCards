@@ -62,9 +62,15 @@ Account progress belongs to the server database, not a browser profile. Clearing
 
 ## Production hosting
 
-This repository now needs a Node host with persistent storage. A static-only deployment is insufficient for accounts and progress. Build with `npm run build`, then configure `APP_ORIGIN` to the exact HTTPS website origin, `SQLFLASHCARDS_PIN_PEPPER` to a private secret of at least 32 characters, and `DATA_DIR` to a durable directory before using `npm start`. Set `HOST` and `PORT` for the deployment network. Keep the same pepper when reusing the database and establish consistent backups and a tested restore procedure. Local `npm run preview` is a test server, not a production deployment.
+The online deployment uses **Vercel for the website and Node API**, with **Neon PostgreSQL for private accounts and progress**. GitHub holds code and SQL lessons; it does not hold live learner records. Local development continues to use SQLite. Online accounts start fresh, as requested.
 
-The [account design](docs/project-artifacts/account-progress.md#running-and-operating-the-service) describes settings, sessions, PIN protection, data ownership, and operating limits. No production website, hosting service, automatic backup, or account-recovery service has been provisioned in this stage.
+Follow the [Vercel deployment and backup runbook](docs/project-artifacts/deployment.md) to connect free accounts, create a PostgreSQL 17 database, configure Vercel Node 24 and production-only `DATABASE_URL`, `APP_ORIGIN`, `SQLFLASHCARDS_PIN_PEPPER`, and `NODEJS_HELPERS=0`, then deploy reviewed source. Preview APIs are disabled. The repository includes the function entry and hosting configuration; [Project status](docs/project-artifacts/status.md) records whether deployment has actually succeeded.
+
+Daily backups export the database directly into authenticated encryption and retain artifacts for 30 days in the separate private [SQLFlashCards-backups repository](https://github.com/RamMarthi9/SQLFlashCards-backups). Configure `BACKUP_DATABASE_URL` and a separate `BACKUP_ENCRYPTION_KEY` there, run the documented backup/restore drill, and enable its reviewed scheduled workflow. The public source repository provides reusable backup code only; configuration alone is not evidence of a successful backup. Keep the PIN pepper and encryption key recoverable separately.
+
+For alternative standalone SQLite hosting, the server needs a Node host with persistent storage. A static-only deployment is insufficient for accounts and progress. Build with `npm run build`, then configure `APP_ORIGIN` to the exact HTTPS website origin, `SQLFLASHCARDS_PIN_PEPPER` to a private secret of at least 32 characters, and `DATA_DIR` to a durable directory before using `npm start`. Set `HOST` and `PORT` for the deployment network. Keep the same pepper when reusing the database and establish consistent backups and a tested restore procedure. Local `npm run preview` is a test server, not a production deployment.
+
+The [account design](docs/project-artifacts/account-progress.md#running-and-operating-the-service) describes settings, sessions, PIN protection, data ownership, and operating limits. Account recovery remains unimplemented. Hosting, backup activation, and actual verification are tracked in the deployment runbook and project status.
 
 ## Repository layout
 
@@ -77,8 +83,9 @@ src/
   content/              Versioned JSON starter cards, content types, validation, and tests
   styles.css            Shared page styles
   test/setup.ts         Test environment setup
-server/                 Node account/progress API, SQLite persistence, and integration tests
-scripts/                Development launcher and build support
+server/                 Shared account API, local SQLite and hosted PostgreSQL stores, tests
+api/                    Vercel function entry
+scripts/                Development launcher, encrypted backups, and guarded restore tools
 docs/project-artifacts/
   README.md             Artifact index and maintenance workflow
   status.md             Current progress and verification record
@@ -86,11 +93,13 @@ docs/project-artifacts/
   lld.md                Low level implementation design
   architecture.md       Architecture decisions and stage boundaries
   account-progress.md   Account API, ownership, authentication, import, and operating design
+  deployment.md         Vercel/Neon settings, backup/restore runbook, and release checks
   syllabus.md           Planned SQL syllabus and example card
   sql-syllabus-index.md Indexed SQL topics and source references
   app-design-reference.png  User's Android and web mockup
 AGENTS.md               Artifact maintenance guidance for project work
-.github/workflows/      Automated checks
+.github/workflows/      Automated checks and reusable private-backup workflow
+vercel.json             Website, API packaging, and security header configuration
 package-lock.json       Reproducible dependency installation
 ```
 
@@ -100,9 +109,9 @@ The strict TypeScript, ESLint, Vite, and Vitest configuration files live at the 
 
 - React and strict TypeScript provide the interface; Vite handles local development and builds.
 - GitHub is the source of truth for code, versioned JSON flashcards, tests, and documentation.
-- A Node API stores explicit completion per account in persistent SQLite. The previous IndexedDB records are an optional, explicit import source only.
+- A Node API stores explicit completion per account in Neon PostgreSQL online and SQLite locally. The previous IndexedDB records are an optional, explicit import source only.
 - Teach SQL concepts broadly, with no single database engine as the default teaching dialect. Label database-specific syntax where needed. The MVP will display SQL examples without executing user-supplied SQL.
-- Production hosting needs HTTPS and durable server storage; the earlier static-only Vercel plan is superseded. Android distribution remains a planned Trusted Web Activity through Bubblewrap.
+- Vercel provides HTTPS and executes the API; Neon retains account data across deployments. Daily encrypted backups supplement the free database recovery window. Android distribution remains a planned Trusted Web Activity through Bubblewrap.
 
 Topic selection, answer reveal, inline learning sections, card navigation, and saved completed/incomplete topics are implemented. Later stages will add performance feedback, revision counts, and proficiency based on performance. Revision reminders must support the requested **1, 3, 5, 7, 20, and 30 day** rule; its scheduling semantics and the proficiency formula still need to be specified before implementation.
 
@@ -116,6 +125,6 @@ Implement only the requested stage. Inspect the repository first, work on a smal
 
 Update the affected [project artifacts](docs/project-artifacts/README.md) alongside each relevant change, and keep the status record and design documents consistent with the implemented app.
 
-Never commit credentials, `.env` secrets, Android signing keys, or learner data. Git ignore rules are a safeguard, so review the staged diff as well. The current stage does not deploy to Vercel, package Android, purchase services, or publish a public release.
+Never commit credentials, `.env` secrets, Android signing keys, learner data, or decrypted backups. Git ignore rules are a safeguard, so review the staged diff as well. Vercel hosting is authorized on free plans only; service purchases and Android packaging are outside this change.
 
 Reference documentation: [Vite](https://vite.dev/guide/), [TypeScript strict mode](https://www.typescriptlang.org/tsconfig/strict.html), and [Vitest](https://vitest.dev/guide/).
